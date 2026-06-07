@@ -1,0 +1,3840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#F6F4F0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Paatty StoreOS">
+<meta name="application-name" content="Paatty StoreOS">
+<meta name="description" content="Paatty Store Management System">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Paatty StoreOS</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ── Reset & Base ── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F6F4F0;
+  --surface:#FFFFFF;
+  --surface2:#F0EDE7;
+  --surface3:#E8E5DE;
+  --border:#DDD9D0;
+  --border2:#C8C4BB;
+  --text:#1C1C1A;
+  --text2:#6B6760;
+  --text3:#A8A49C;
+  --accent:#1C1C1A;
+  --accent-inv:#FFFFFF;
+  --green:#156B43;
+  --green-bg:#E6F4EC;
+  --green-mid:#B8E0C8;
+  --red:#A01E1E;
+  --red-bg:#FCEAEA;
+  --red-mid:#F2BFBF;
+  --amber:#8A5500;
+  --amber-bg:#FFF4DC;
+  --amber-mid:#FFE0A0;
+  --blue:#1A4080;
+  --blue-bg:#EAF0FA;
+  --blue-mid:#B8CFEF;
+  --purple:#5A2D8A;
+  --purple-bg:#F2EBFA;
+  --r:10px;--r-sm:6px;--r-lg:14px;
+  --font:'DM Sans',sans-serif;
+  --mono:'DM Mono',monospace;
+  --shadow:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg:0 4px 24px rgba(0,0,0,.12);
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;display:flex;flex-direction:column}
+
+/* ── Topbar ── */
+#topbar{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;position:sticky;top:0;z-index:50;
+}
+.topbar-row{
+  height:54px;display:flex;align-items:center;
+  padding:0 16px;gap:12px;
+}
+.logo{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo-mark{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.logo-text{font-size:13px;font-weight:600;color:var(--text)}
+.logo-store{font-size:13px;color:var(--text3)}
+/* Desktop nav — inline in topbar */
+.nav{display:flex;gap:2px;background:var(--surface2);border-radius:var(--r-sm);padding:3px;margin:0 auto}
+.nav-btn{padding:6px 14px;border-radius:4px;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;border:none;background:none;font-family:var(--font);transition:all .15s;white-space:nowrap}
+.nav-btn.active{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
+.icon-btn{width:32px;height:32px;border-radius:var(--r-sm);border:1px solid var(--border);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:background .15s}
+.icon-btn:hover{background:var(--surface2)}
+/* Mobile bottom nav */
+#mobile-nav{display:none}
+@media(max-width:640px){
+  .topbar-row{padding:0 12px}
+  .nav{display:none} /* hide top nav on mobile */
+  .logo-store{display:none}
+  #mobile-nav{
+    display:flex;
+    background:var(--surface);
+    border-top:1px solid var(--border);
+    padding:6px 4px;
+    gap:2px;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    position:fixed;bottom:0;left:0;right:0;z-index:50;
+  }
+  #mobile-nav::-webkit-scrollbar{display:none}
+  .mob-nav-btn{
+    flex:1;min-width:52px;padding:6px 4px 4px;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    border:none;background:none;cursor:pointer;
+    font-family:var(--font);border-radius:var(--r-sm);transition:background .15s;
+  }
+  .mob-nav-btn:hover,.mob-nav-btn.active{background:var(--surface2)}
+  .mob-nav-icon{font-size:18px;line-height:1}
+  .mob-nav-label{font-size:9px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+  .mob-nav-btn.active .mob-nav-label{color:var(--accent);font-weight:700}
+  .mob-nav-btn.active .mob-nav-icon{filter:saturate(1.5)}
+  /* push main content up so bottom nav doesn't cover it */
+  #main{padding-bottom:72px!important}
+  /* POS layout stacks on mobile */
+  .pos-wrap{grid-template-columns:1fr!important;height:auto!important}
+  .pos-right{border-top:1px solid var(--border)}
+}
+
+/* ── Main scroll area ── */
+#main{flex:1;overflow-y:auto;padding:20px}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.panel-inner{max-width:980px;margin:0 auto}
+
+/* ── Page header ── */
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px}
+.ph-title{font-size:19px;font-weight:600;color:var(--text);line-height:1.2}
+.ph-sub{font-size:12px;color:var(--text3);margin-top:3px}
+
+/* ── Buttons ── */
+.btn{padding:8px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:var(--font);transition:all .15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-primary{background:var(--accent);color:var(--accent-inv)}
+.btn-primary:hover{opacity:.85}
+.btn-ghost{background:none;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--surface2)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red-mid)}
+.btn-danger:hover{background:var(--red-mid)}
+.btn-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-mid)}
+.btn-green:hover{background:var(--green-mid)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px;border-radius:4px}
+
+/* ── Stats row ── */
+.stats{display:grid;gap:10px;margin-bottom:20px}
+.stats-4{grid-template-columns:repeat(4,1fr)}
+.stats-3{grid-template-columns:repeat(3,1fr)}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:15px 16px}
+.stat-val{font-size:24px;font-weight:600;font-family:var(--mono);color:var(--text);letter-spacing:-0.03em;line-height:1}
+.stat-label{font-size:11px;color:var(--text3);margin-top:5px;font-weight:500;text-transform:uppercase;letter-spacing:.07em}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* ── Search & filter bar ── */
+.toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.search-wrap{position:relative;flex:1;min-width:180px}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:var(--text3);stroke-width:2;fill:none}
+.search-inp{width:100%;padding:8px 12px 8px 32px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);background:var(--surface);color:var(--text);outline:none;transition:border .15s}
+.search-inp:focus{border-color:var(--border2)}
+.filter-chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-family:var(--font);transition:all .15s}
+.chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden;transition:box-shadow .15s}
+.card:hover{box-shadow:var(--shadow)}
+.card-head{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;user-select:none}
+.card-avatar{width:40px;height:40px;border-radius:var(--r-sm);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--text2);flex-shrink:0;font-family:var(--mono);letter-spacing:.02em}
+.card-info{flex:1;min-width:0}
+.card-name{font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-meta{font-size:12px;color:var(--text3);margin-top:2px}
+.card-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.chevron{color:var(--text3);font-size:12px;transition:transform .2s;margin-left:4px}
+.chevron.open{transform:rotate(180deg)}
+.card-body{display:none;border-top:1px solid var(--border);padding:16px}
+.card-body.open{display:block}
+
+/* ── Badges / pills ── */
+.badge{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-amber{background:var(--amber-bg);color:var(--amber)}
+.badge-blue{background:var(--blue-bg);color:var(--blue)}
+.badge-red{background:var(--red-bg);color:var(--red)}
+.badge-gray{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.badge-purple{background:var(--purple-bg);color:var(--purple)}
+.low-tag{padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700;background:var(--red-bg);color:var(--red);margin-left:6px}
+
+/* ── Info grid in card body ── */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;margin-bottom:14px}
+.info-block{}
+.info-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:4px}
+.info-val{font-size:13px;color:var(--text);font-weight:500}
+
+/* ── Product rows ── */
+.product-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface2);border-radius:var(--r-sm);margin-bottom:5px}
+.product-name{flex:1;font-size:13px;font-weight:500;color:var(--text)}
+.product-stock{font-size:12px;font-family:var(--mono);color:var(--text2);white-space:nowrap}
+.product-stock.low{color:var(--red);font-weight:600}
+.product-stock.ok{color:var(--green)}
+
+/* ── Orders mini-table ── */
+.mini-table{width:100%;border-collapse:collapse;margin-top:4px}
+.mini-table th{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:600;text-align:left;padding:5px 8px;border-bottom:1px solid var(--border)}
+.mini-table td{font-size:12px;padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text)}
+.mini-table tr:last-child td{border:none}
+
+/* ── Action row ── */
+.action-row{display:flex;gap:8px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap}
+
+/* ── Credit info box ── */
+.credit-box{padding:10px 13px;border-radius:var(--r-sm);font-size:12px;margin:10px 0;border:1px solid}
+.credit-box.full{background:var(--green-bg);color:var(--green);border-color:var(--green-mid)}
+.credit-box.partial{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-mid)}
+.credit-box.upfront{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid)}
+
+/* ── Section label ── */
+.sec-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin:14px 0 8px}
+
+/* ── Inventory specific ── */
+.inv-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;transition:box-shadow .15s}
+.inv-row:hover{box-shadow:var(--shadow)}
+.inv-thumb{width:44px;height:44px;border-radius:var(--r-sm);object-fit:cover;background:var(--surface2);flex-shrink:0;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;cursor:pointer}
+.inv-thumb img{width:100%;height:100%;object-fit:cover;border-radius:calc(var(--r-sm) - 1px)}
+.inv-name{flex:1;font-size:14px;font-weight:500;color:var(--text)}
+.inv-desc{font-size:11px;color:var(--text3);margin-top:1px;font-style:italic}
+.inv-supplier{font-size:11px;color:var(--text3);margin-top:2px}
+.inv-price{font-size:12px;font-family:var(--mono);color:var(--text2);white-space:nowrap;text-align:right;flex-shrink:0;min-width:70px}
+/* Photo upload widget */
+.photo-upload-wrap{position:relative;width:100%;height:110px;border:2px dashed var(--border);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;transition:border-color .15s;overflow:hidden;background:var(--surface2)}
+.photo-upload-wrap:hover{border-color:var(--border2)}
+.photo-upload-wrap.has-photo{border-style:solid;border-color:var(--border)}
+.photo-upload-wrap img.preview{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.photo-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;border-radius:var(--r-sm)}
+.photo-upload-wrap:hover .photo-overlay{opacity:1}
+.photo-overlay span{color:#fff;font-size:12px;font-weight:600}
+.photo-upload-label{font-size:12px;color:var(--text3);pointer-events:none;position:relative;z-index:1}
+.photo-upload-icon{font-size:22px;pointer-events:none;position:relative;z-index:1}
+/* Remove background button */
+.bg-remove-btn{
+  width:100%;margin-top:7px;
+  background:var(--surface2);color:var(--text);
+  border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:8px 12px;font-size:12px;font-weight:500;cursor:pointer;
+  font-family:var(--font);display:none;transition:all .15s;text-align:center;
+}
+.bg-remove-btn:hover{background:var(--surface3);border-color:var(--border2)}
+.bg-remove-btn.visible{display:block}
+/* Sensitivity slider shown after first removal */
+.bg-sensitivity-row{display:none;margin-top:8px;padding:10px 12px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm)}
+.bg-sensitivity-row.visible{display:block}
+.bg-sensitivity-row label{font-size:11px;font-weight:500;color:var(--text2);display:flex;justify-content:space-between;margin-bottom:6px}
+.bg-sensitivity-row input[type=range]{width:100%;accent-color:var(--accent)}
+.bg-sensitivity-hint{font-size:10px;color:var(--text3);margin-top:4px;text-align:center}
+/* Photo lightbox */
+#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:none;align-items:center;justify-content:center;cursor:pointer}
+#lightbox.open{display:flex}
+#lightbox img{max-width:90vw;max-height:85vh;border-radius:var(--r);object-fit:contain}
+.stock-bar-wrap{width:100px;background:var(--surface2);border-radius:3px;height:5px;overflow:hidden}
+.stock-bar{height:100%;border-radius:3px;transition:width .3s}
+.stock-bar.ok{background:var(--green)}
+.stock-bar.low{background:var(--red)}
+.stock-bar.warn{background:var(--amber)}
+.stock-num{font-size:12px;font-family:var(--mono);color:var(--text2);width:70px;text-align:right}
+.qty-ctrl{display:flex;align-items:center;gap:6px}
+.qty-btn{width:26px;height:26px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;line-height:1;color:var(--text);font-family:var(--mono)}
+.qty-btn:hover{background:var(--surface3)}
+.qty-val{font-size:13px;font-family:var(--mono);font-weight:500;color:var(--text);width:36px;text-align:center;padding:4px;border:1px solid var(--border);border-radius:4px;background:var(--surface)}
+
+/* ── Expenses ── */
+.exp-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;cursor:pointer;transition:box-shadow .15s}
+.exp-row:hover{box-shadow:var(--shadow)}
+.exp-icon{width:36px;height:36px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.exp-info{flex:1;min-width:0}
+.exp-name{font-size:13px;font-weight:600;color:var(--text)}
+.exp-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.exp-amount{font-size:14px;font-weight:600;font-family:var(--mono);color:var(--text);flex-shrink:0}
+.exp-due{font-size:11px;color:var(--text3);text-align:right;margin-top:2px}
+.exp-due.soon{color:var(--amber);font-weight:600}
+.exp-due.overdue{color:var(--red);font-weight:600}
+
+/* ── Calendar strip ── */
+.cal-strip{display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px}
+.cal-day{flex-shrink:0;width:52px;padding:8px 6px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);text-align:center;cursor:pointer;transition:all .15s}
+.cal-day:hover{border-color:var(--border2)}
+.cal-day.active{background:var(--accent);border-color:var(--accent)}
+.cal-day.has-event{position:relative}
+.cal-day.has-event::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--red)}
+.cal-day.active.has-event::after{background:#fff}
+.cal-dayname{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)}
+.cal-daynum{font-size:16px;font-weight:600;font-family:var(--mono);color:var(--text);margin-top:2px}
+.cal-day.active .cal-dayname,.cal-day.active .cal-daynum{color:#fff}
+
+/* ── Staff module ── */
+.staff-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:box-shadow .15s}
+.staff-card:hover{box-shadow:var(--shadow)}
+.staff-avatar{width:42px;height:42px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--text2);flex-shrink:0;font-family:var(--mono)}
+.staff-info{flex:1}
+.staff-name{font-size:14px;font-weight:600;color:var(--text)}
+.staff-role{font-size:12px;color:var(--text3);margin-top:2px}
+.staff-salary{font-size:14px;font-weight:600;font-family:var(--mono);color:var(--text);text-align:right}
+.staff-pay-status{font-size:11px;text-align:right;margin-top:2px}
+
+/* ── Modals ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:12px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+@media(min-height:700px){.overlay{align-items:center}}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--r-lg);padding:24px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg);position:relative}
+.modal-lg{max-width:560px;max-height:92vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;padding:2px;line-height:1}
+.modal-close:hover{color:var(--text)}
+.form-row{margin-bottom:13px}
+.form-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;display:block}
+.form-inp{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);background:var(--surface);color:var(--text);outline:none;transition:border .15s}
+.form-inp:focus{border-color:var(--border2)}
+.form-select{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:var(--font);background:var(--surface);color:var(--text);outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* ── Order modal ── */
+.order-item-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:8px 10px;background:var(--surface2);border-radius:var(--r-sm)}
+.order-item-name{flex:1;font-size:13px;font-weight:500;color:var(--text)}
+.order-stock-note{font-size:11px;color:var(--text3)}
+.qty-inp{width:72px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-family:var(--mono);text-align:center;background:var(--surface);color:var(--text);outline:none}
+.order-summary{background:var(--surface2);border-radius:var(--r-sm);padding:12px 14px;margin-top:12px}
+.order-sum-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;color:var(--text)}
+.order-sum-row.total{font-weight:600;border-top:1px solid var(--border);margin-top:6px;padding-top:9px}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--accent);color:#fff;padding:10px 18px;border-radius:24px;font-size:13px;font-weight:500;opacity:0;transition:all .25s;z-index:999;pointer-events:none;white-space:nowrap;display:flex;align-items:center;gap:10px}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+#toast .toast-undo{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:12px;padding:3px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)}
+#toast .toast-undo:hover{background:rgba(255,255,255,.35)}
+
+/* ── Dashboard tab ── */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.dash-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.dash-card-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:12px}
+.alert-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r-sm);margin-bottom:6px}
+.alert-item.red{background:var(--red-bg)}
+.alert-item.amber{background:var(--amber-bg)}
+.alert-item.green{background:var(--green-bg)}
+.alert-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.alert-dot.red{background:var(--red)}
+.alert-dot.amber{background:var(--amber)}
+.alert-dot.green{background:var(--green)}
+.alert-text{font-size:12px;color:var(--text);flex:1}
+.alert-action{font-size:11px;font-weight:600;cursor:pointer;text-decoration:underline}
+.alert-action.red{color:var(--red)}
+.alert-action.amber{color:var(--amber)}
+
+/* ── Confirm dialog ── */
+.confirm-modal{max-width:360px}
+.confirm-msg{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:4px}
+
+/* ── Empty state ── */
+.empty-state{text-align:center;padding:48px 20px;color:var(--text3)}
+.empty-icon{font-size:36px;margin-bottom:10px}
+.empty-text{font-size:14px;font-weight:500;color:var(--text2)}
+.empty-sub{font-size:12px;color:var(--text3);margin-top:4px}
+
+/* ── Responsive ── */
+@media(max-width:700px){
+  .stats-4,.stats-3{grid-template-columns:1fr 1fr}
+  .info-grid{grid-template-columns:1fr}
+  .dash-grid{grid-template-columns:1fr}
+  #main{padding:14px}
+}
+@media(max-width:480px){
+  .stats-4{grid-template-columns:1fr 1fr}
+  .stock-bar-wrap{display:none}
+  .ph{flex-wrap:wrap}
+}
+
+/* ── Catalogue ── */
+.cat-row{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:7px;transition:box-shadow .15s}
+.cat-row:hover{box-shadow:var(--shadow)}
+.cat-thumb{width:40px;height:40px;border-radius:var(--r-sm);object-fit:cover;background:var(--surface2);flex-shrink:0;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;overflow:hidden}
+.cat-thumb img{width:100%;height:100%;object-fit:cover;border-radius:calc(var(--r-sm) - 1px)}
+.cat-name{flex:1;min-width:0}
+.cat-title{font-size:14px;font-weight:500;color:var(--text)}
+.cat-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.cat-prices{text-align:right;flex-shrink:0;min-width:80px}
+.cat-sell{font-size:13px;font-weight:600;font-family:var(--mono);color:var(--text)}
+.cat-unit{font-size:10px;color:var(--text3);margin-top:1px}
+/* ── Calendar grid (2-row month view) ── */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:20px}
+.cal-cell{padding:7px 5px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);text-align:center;cursor:pointer;transition:all .15s;position:relative;font-size:13px;color:var(--text)}
+.cal-cell:hover{border-color:var(--border2);background:var(--surface2)}
+.cal-cell.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.cal-cell.today{border:2px solid var(--amber);background:var(--amber-bg);color:var(--amber);font-weight:700}
+.cal-cell.today.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.cal-cell.other-month{opacity:.3;pointer-events:none}
+.cal-cell.has-event::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--red)}
+.cal-cell.active.has-event::after{background:#fff}
+.cal-cell.has-salary::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--blue)}
+.cal-cell.active.has-salary::after{background:#fff}
+.cal-cell.has-event.has-salary::after{background:var(--red)}
+.cal-dayname-row{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:4px}
+.cal-dayname-cell{text-align:center;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);padding:2px}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-nav-title{font-size:14px;font-weight:600;color:var(--text)}
+.cal-nav-btn{background:none;border:1px solid var(--border);border-radius:var(--r-sm);width:28px;height:28px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text2)}
+.cal-nav-btn:hover{background:var(--surface2)}
+.cal-legend{display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap}
+.cal-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)}
+.cal-legend-dot{width:7px;height:7px;border-radius:50%}
+/* Cal tooltip */
+.cal-cell[data-tip]:hover::before{
+  content:attr(data-tip);
+  position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:var(--text);color:#fff;font-size:11px;font-weight:500;
+  padding:4px 8px;border-radius:5px;white-space:nowrap;z-index:100;
+  pointer-events:none;max-width:180px;white-space:normal;text-align:center;line-height:1.4;
+}
+.cal-cell[data-tip]:hover::after{
+  content:'';position:absolute;bottom:calc(100% + 2px);left:50%;transform:translateX(-50%);
+  border:4px solid transparent;border-top-color:var(--text);z-index:100;pointer-events:none;
+}
+
+/* ── POS ── */
+#tab-pos{background:var(--bg)}
+.pos-wrap{display:grid;grid-template-columns:1fr 380px;gap:0;height:calc(100vh - 54px);overflow:hidden}
+.pos-left{overflow-y:auto;padding:16px;border-right:1px solid var(--border)}
+.pos-right{display:flex;flex-direction:column;background:var(--surface);overflow:hidden}
+.pos-search-bar{display:flex;gap:8px;margin-bottom:14px;position:sticky;top:0;background:var(--bg);padding-bottom:10px;z-index:10}
+.pos-search-inp{flex:1;padding:10px 14px;border:2px solid var(--border);border-radius:var(--r-sm);font-size:14px;font-family:var(--font);background:var(--surface);color:var(--text);outline:none;transition:border .15s}
+.pos-search-inp:focus{border-color:var(--accent)}
+.pos-product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.pos-product-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;cursor:pointer;transition:all .15s;position:relative;text-align:center}
+.pos-product-card:hover{border-color:var(--accent);box-shadow:var(--shadow)}
+.pos-product-card.out-of-stock{opacity:.45;pointer-events:none}
+.pos-product-thumb{width:52px;height:52px;border-radius:var(--r-sm);background:var(--surface2);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden}
+.pos-product-thumb img{width:100%;height:100%;object-fit:cover;border-radius:calc(var(--r-sm) - 1px)}
+.pos-product-name{font-size:12px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px}
+.pos-product-price{font-size:13px;font-weight:700;font-family:var(--mono);color:var(--accent)}
+.pos-product-stock{font-size:10px;color:var(--text3);margin-top:2px}
+.pos-product-stock.low{color:var(--red);font-weight:600}
+.pos-add-badge{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+/* Bill panel */
+.pos-bill-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.pos-bill-title{font-size:14px;font-weight:600;color:var(--text)}
+.pos-bill-items{flex:1;overflow-y:auto;padding:8px 0}
+.pos-bill-empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px}
+.pos-bill-row{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border)}
+.pos-bill-name{flex:1;font-size:13px;font-weight:500;color:var(--text);min-width:0}
+.pos-bill-unit-price{font-size:11px;color:var(--text3);margin-top:1px}
+.pos-bill-qty{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.pos-qty-btn{width:24px;height:24px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text);font-family:var(--mono);flex-shrink:0;line-height:1}
+.pos-qty-btn:hover{background:var(--surface3)}
+.pos-qty-val{font-size:13px;font-family:var(--mono);font-weight:600;width:28px;text-align:center;color:var(--text)}
+.pos-bill-subtotal{font-size:13px;font-weight:600;font-family:var(--mono);color:var(--text);flex-shrink:0;min-width:70px;text-align:right}
+.pos-bill-remove{background:none;border:none;cursor:pointer;color:var(--text3);font-size:15px;padding:2px;flex-shrink:0}
+.pos-bill-remove:hover{color:var(--red)}
+/* Bill footer */
+.pos-bill-footer{padding:14px 16px;border-top:1px solid var(--border);flex-shrink:0}
+.pos-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.pos-total-label{font-size:12px;color:var(--text3)}
+.pos-total-val{font-size:13px;font-weight:600;font-family:var(--mono);color:var(--text)}
+.pos-grand-total{font-size:22px;font-weight:700;font-family:var(--mono);color:var(--text)}
+.pos-pay-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:12px}
+.pos-pay-btn{padding:10px 6px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:var(--surface);color:var(--text2);font-family:var(--font);transition:all .15s;text-align:center}
+.pos-pay-btn:hover{border-color:var(--border2);background:var(--surface2)}
+.pos-pay-btn.selected{border-color:var(--accent);background:var(--accent);color:#fff}
+.pos-charge-btn{width:100%;padding:13px;margin-top:10px;border-radius:var(--r-sm);background:var(--accent);color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:var(--font);transition:opacity .15s}
+.pos-charge-btn:hover{opacity:.88}
+.pos-charge-btn:disabled{opacity:.4;cursor:not-allowed}
+/* Cash input */
+.pos-cash-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.pos-cash-inp{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:14px;font-family:var(--mono);background:var(--surface);color:var(--text);outline:none}
+.pos-cash-inp:focus{border-color:var(--accent)}
+/* pos-change replaced by pos-change-box */
+/* Receipt modal */
+/* Receipt preview in modal */
+.receipt{font-family:'Courier New',Courier,monospace;font-size:11px;color:#111;background:#fff;padding:14px;border-radius:var(--r-sm);border:1px solid var(--border);max-height:70vh;overflow-y:auto;max-width:300px;margin:0 auto}
+.receipt-header{text-align:center;margin-bottom:8px;padding-bottom:8px;border-bottom:2px dashed #000}
+.receipt-store{font-size:15px;font-weight:900;letter-spacing:.05em}
+.receipt-addr{font-size:10px;margin-top:1px;color:#333}
+.receipt-meta{margin-bottom:4px}
+.receipt-meta-row{display:flex;justify-content:space-between;font-size:10px;padding:1px 0}
+.receipt-cols{display:flex;font-size:10px;font-weight:700;padding:2px 0}
+.receipt-line{display:flex;font-size:10px;padding:2px 0;border-bottom:1px dotted #eee}
+.col-item{flex:2;overflow:hidden}
+.col-qty{width:24px;text-align:center;flex-shrink:0}
+.col-price{width:50px;text-align:right;flex-shrink:0}
+.col-dis{width:36px;text-align:right;flex-shrink:0}
+.col-amt{width:52px;text-align:right;flex-shrink:0}
+.receipt-summary-row{display:flex;justify-content:space-between;font-size:11px;padding:2px 0}
+.receipt-net{font-weight:900;font-size:12px}
+.receipt-divider{border:none;border-top:2px dashed #000;margin:5px 0}
+.receipt-divider-light{border:none;border-top:1px dashed #999;margin:3px 0}
+.receipt-footer{text-align:center;font-size:10px;margin-top:6px;padding-top:6px;border-top:1px dashed #999}
+/* Sales history */
+.sale-row{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:7px}
+.sale-method{width:32px;height:32px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.sale-info{flex:1;min-width:0}
+.sale-time{font-size:13px;font-weight:500;color:var(--text)}
+.sale-items{font-size:11px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sale-total{font-size:15px;font-weight:700;font-family:var(--mono);color:var(--text);flex-shrink:0}
+/* Responsive POS */
+@media(max-width:700px){
+  .pos-wrap{grid-template-columns:1fr;height:auto}
+  .pos-right{height:auto;max-height:none}
+  .pos-bill-items{max-height:300px}
+}
+/* ── Scrollable areas ── */
+.scrollable{overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.scrollable::-webkit-scrollbar{width:4px}
+.scrollable::-webkit-scrollbar-track{background:transparent}
+.scrollable::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+/* ── Login screen ── */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:36px 32px;width:100%;max-width:360px;box-shadow:var(--shadow-lg)}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.login-logo-mark{width:36px;height:36px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center}
+.login-logo-mark svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.login-title{font-size:20px;font-weight:600;color:var(--text)}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:24px}
+.login-err{font-size:12px;color:var(--red);background:var(--red-bg);padding:9px 12px;border-radius:var(--r-sm);margin-bottom:14px;display:none}
+.login-err.show{display:block}
+/* ── Sync indicator ── */
+#sync-badge{
+  display:flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:500;
+  padding:4px 10px;border-radius:20px;
+  cursor:default;transition:all .3s;
+  border:1px solid transparent;
+}
+#sync-badge.synced{background:var(--green-bg);color:var(--green);border-color:var(--green-mid)}
+#sync-badge.syncing{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-mid)}
+#sync-badge.offline{background:var(--red-bg);color:var(--red);border-color:var(--red-mid)}
+.sync-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+#sync-badge.synced .sync-dot{background:var(--green)}
+#sync-badge.syncing .sync-dot{background:var(--amber);animation:pulse 1s ease-in-out infinite}
+#sync-badge.offline .sync-dot{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-mark">
+        <svg viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+      </div>
+      <div>
+        <div style="font-size:15px;font-weight:600;color:var(--text)">StoreOS</div>
+        <div style="font-size:12px;color:var(--text3)">Paatty</div>
+      </div>
+    </div>
+    <div class="login-sub">Sign in to access your store</div>
+    <div class="login-err" id="login-err"></div>
+    <div class="form-row"><label class="form-label">Email</label><input class="form-inp" id="login-email" type="email" placeholder="you@email.com" autocomplete="email"></div>
+    <div class="form-row"><label class="form-label">Password</label><input class="form-inp" id="login-password" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px" id="login-btn" onclick="doLogin()">Sign in</button>
+    <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--text3)">
+      No account? <span style="color:var(--text);cursor:pointer;font-weight:500;text-decoration:underline" onclick="showSignup()">Create one</span>
+    </div>
+    <div id="signup-section" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <div class="form-row"><label class="form-label">Confirm password</label><input class="form-inp" id="signup-confirm" type="password" placeholder="••••••••"></div>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="doSignup()">Create account</button>
+    </div>
+  </div>
+</div>
+
+<div id="topbar">
+  <div class="topbar-row">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+      </div>
+      <span class="logo-text">StoreOS</span>
+      <span class="logo-store">— Paatty</span>
+    </div>
+    <div class="nav">
+      <button class="nav-btn active" onclick="showTab('dashboard')">Dashboard</button>
+      <button class="nav-btn" onclick="showTab('pos')" style="background:var(--accent);color:#fff;border-radius:4px">🛒 POS</button>
+      <button class="nav-btn" onclick="showTab('products')">Products</button>
+      <button class="nav-btn" onclick="showTab('inventory')">Inventory</button>
+      <button class="nav-btn" onclick="showTab('suppliers')">Suppliers</button>
+      <button class="nav-btn" onclick="showTab('expenses')">Expenses & Staff</button>
+    </div>
+    <div class="topbar-right">
+      <div id="sync-badge" class="syncing" title="Tap to test connection" onclick="testConnection()" style="cursor:pointer"><div class="sync-dot"></div><span id="sync-text">Connecting...</span></div>
+      <button class="icon-btn" title="Notifications" onclick="showTab('dashboard')">🔔</button>
+      <button class="icon-btn" title="Sign out" onclick="doLogout()">⏻</button>
+    </div>
+  </div>
+  <!-- Mobile bottom nav -->
+  <nav id="mobile-nav">
+    <button class="mob-nav-btn active" id="mob-dashboard" onclick="showTab('dashboard')">
+      <span class="mob-nav-icon">🏠</span><span class="mob-nav-label">Home</span>
+    </button>
+    <button class="mob-nav-btn" id="mob-pos" onclick="showTab('pos')">
+      <span class="mob-nav-icon">🛒</span><span class="mob-nav-label">POS</span>
+    </button>
+    <button class="mob-nav-btn" id="mob-products" onclick="showTab('products')">
+      <span class="mob-nav-icon">🏪</span><span class="mob-nav-label">Products</span>
+    </button>
+    <button class="mob-nav-btn" id="mob-inventory" onclick="showTab('inventory')">
+      <span class="mob-nav-icon">📦</span><span class="mob-nav-label">Stock</span>
+    </button>
+    <button class="mob-nav-btn" id="mob-suppliers" onclick="showTab('suppliers')">
+      <span class="mob-nav-icon">🚚</span><span class="mob-nav-label">Suppliers</span>
+    </button>
+    <button class="mob-nav-btn" id="mob-expenses" onclick="showTab('expenses')">
+      <span class="mob-nav-icon">📋</span><span class="mob-nav-label">Expenses</span>
+    </button>
+  </nav>
+</div>
+
+<!-- Main -->
+<div id="main">
+
+  <!-- ───────────── DASHBOARD ───────────── -->
+  <div class="tab-panel active" id="tab-dashboard">
+    <div class="panel-inner">
+      <div class="ph">
+        <div>
+          <div class="ph-title" id="dash-greeting">Good morning</div>
+          <div class="ph-sub" id="dash-date"></div>
+        </div>
+        <button class="btn btn-primary" onclick="openStockDeduct()">+ Record Sales</button>
+      </div>
+      <div class="stats stats-4" id="dash-stats"></div>
+      <div class="dash-grid">
+        <div class="dash-card">
+          <div class="dash-card-title">⚡ Alerts</div>
+          <div id="dash-alerts"></div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-title">📅 Upcoming payments</div>
+          <div id="dash-payments"></div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-title">📦 Quick reorder</div>
+          <div id="dash-reorder"></div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-title">👥 Salary due</div>
+          <div id="dash-salary"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────── PRODUCTS CATALOGUE ───────────── -->
+  <div class="tab-panel" id="tab-products">
+    <div class="panel-inner">
+      <div class="ph">
+        <div>
+          <div class="ph-title">Products Catalogue</div>
+          <div class="ph-sub">Master list of every product — search &amp; add anywhere</div>
+        </div>
+        <button class="btn btn-primary" onclick="openAddCatalogueProduct()">+ Add Product</button>
+      </div>
+      <div class="stats stats-3" id="cat-stats"></div>
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 16 16"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10" y1="10" x2="14" y2="14"/></svg>
+          <input class="search-inp" id="cat-search" placeholder="Search products by name, category..." oninput="renderCatalogue()">
+        </div>
+        <div class="filter-chips">
+          <span class="chip active" onclick="setCatFilter('all',this)">All</span>
+          <span class="chip" onclick="setCatFilter('in-inventory',this)">In inventory</span>
+          <span class="chip" onclick="setCatFilter('not-inventory',this)">Not in inventory</span>
+        </div>
+      </div>
+      <div id="cat-list"></div>
+    </div>
+  </div>
+
+  <!-- ───────────── POS ───────────── -->
+  <div class="tab-panel" id="tab-pos">
+    <div class="pos-wrap">
+      <!-- Left: product grid -->
+      <div class="pos-left">
+        <div class="pos-search-bar">
+          <input class="pos-search-inp" id="pos-search" placeholder="🔍 Search product or scan barcode..." oninput="posSearch(this.value)" autocomplete="off" autocorrect="off">
+          <button class="btn btn-ghost" onclick="posSearch('');document.getElementById('pos-search').value=''">Clear</button>
+        </div>
+        <div class="pos-product-grid" id="pos-grid"></div>
+      </div>
+      <!-- Right: bill -->
+      <div class="pos-right">
+        <div class="pos-bill-header">
+          <div class="pos-bill-title">Current Bill</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span id="pos-item-count" style="font-size:12px;color:var(--text3)"></span>
+            <button class="btn btn-danger btn-xs" onclick="clearBill()">Clear</button>
+            <button class="btn btn-ghost btn-xs" onclick="showTab('sales')">Sales history</button>
+          </div>
+        </div>
+        <div class="pos-bill-items" id="pos-bill-items">
+          <div class="pos-bill-empty">No items yet<br><span style="font-size:11px">Search or scan a product</span></div>
+        </div>
+        <div class="pos-bill-footer">
+          <div class="pos-total-row"><span class="pos-total-label">Subtotal</span><span class="pos-total-val" id="pos-subtotal">LKR 0</span></div>
+          <div class="pos-total-row" style="margin-bottom:10px"><span class="pos-total-label">Items</span><span class="pos-total-val" id="pos-item-total">0</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <span style="font-size:12px;color:var(--text3)">Total</span>
+            <span class="pos-grand-total" id="pos-grand-total">LKR 0</span>
+          </div>
+          <div class="pos-pay-btns">
+            <button class="pos-pay-btn selected" id="pay-cash" onclick="selectPayMethod('cash')">💵 Cash</button>
+            <button class="pos-pay-btn" id="pay-card" onclick="selectPayMethod('card')">💳 Card</button>
+            <button class="pos-pay-btn" id="pay-credit" onclick="selectPayMethod('credit')">📒 Credit</button>
+          </div>
+          <div id="pos-cash-section" style="margin-top:8px">
+            <div class="pos-cash-row">
+              <span style="font-size:12px;color:var(--text2);white-space:nowrap">Cash received</span>
+              <input class="pos-cash-inp" id="pos-cash-inp" type="number" placeholder="0" oninput="calcChange()">
+            </div>
+            <!-- Change display — big and obvious -->
+            <div id="pos-change-box" style="display:none;margin-top:8px;padding:12px 14px;border-radius:var(--r-sm);text-align:center;transition:all .2s">
+              <div id="pos-change-label" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px"></div>
+              <div id="pos-change-amount" style="font-size:32px;font-weight:700;font-family:var(--mono);letter-spacing:-0.02em;line-height:1"></div>
+            </div>
+          </div>
+          <button class="pos-charge-btn" id="pos-charge-btn" onclick="completeSale()" disabled>Charge — LKR 0</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────── SALES HISTORY ───────────── -->
+  <div class="tab-panel" id="tab-sales">
+    <div class="panel-inner">
+      <div class="ph">
+        <div>
+          <div class="ph-title">Sales History</div>
+          <div class="ph-sub" id="sales-sub">All transactions</div>
+        </div>
+        <button class="btn btn-ghost" onclick="showTab('pos')">← Back to POS</button>
+      </div>
+      <div class="stats stats-3" id="sales-stats"></div>
+      <div id="sales-list"></div>
+    </div>
+  </div>
+
+  <!-- ───────────── INVENTORY ───────────── -->
+  <div class="tab-panel" id="tab-inventory">
+    <div class="panel-inner">
+      <div class="ph">
+        <div>
+          <div class="ph-title">Inventory</div>
+          <div class="ph-sub">Track stock levels for every product</div>
+        </div>
+        <button class="btn btn-primary" onclick="openAddProduct()">+ Add Product</button>
+      </div>
+      <div class="stats stats-4" id="inv-stats"></div>
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 16 16"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10" y1="10" x2="14" y2="14"/></svg>
+          <input class="search-inp" id="inv-search" placeholder="Search products..." oninput="renderInventory()">
+        </div>
+        <div class="filter-chips">
+          <span class="chip active" onclick="setInvFilter('all',this)">All</span>
+          <span class="chip" onclick="setInvFilter('low',this)">Low stock</span>
+          <span class="chip" onclick="setInvFilter('ok',this)">In stock</span>
+        </div>
+      </div>
+      <div id="inv-list"></div>
+    </div>
+  </div>
+
+  <!-- ───────────── SUPPLIERS ───────────── -->
+  <div class="tab-panel" id="tab-suppliers">
+    <div class="panel-inner">
+      <div class="ph">
+        <div>
+          <div class="ph-title">Suppliers</div>
+          <div class="ph-sub">Manage suppliers, credit terms &amp; reorders</div>
+        </div>
+        <button class="btn btn-primary" onclick="openAddSupplier()">+ Add Supplier</button>
+      </div>
+      <div class="stats stats-4" id="sup-stats"></div>
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 16 16"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10" y1="10" x2="14" y2="14"/></svg>
+          <input class="search-inp" id="sup-search" placeholder="Search suppliers or products..." oninput="renderSuppliers()">
+        </div>
+        <div class="filter-chips">
+          <span class="chip active" onclick="setSupFilter('all',this)">All</span>
+          <span class="chip" onclick="setSupFilter('full',this)">Full credit</span>
+          <span class="chip" onclick="setSupFilter('partial',this)">Partial</span>
+          <span class="chip" onclick="setSupFilter('upfront',this)">Upfront</span>
+          <span class="chip" onclick="setSupFilter('owed',this)">Has balance</span>
+        </div>
+      </div>
+      <div id="sup-list"></div>
+    </div>
+  </div>
+
+  <!-- ───────────── EXPENSES & STAFF ───────────── -->
+  <div class="tab-panel" id="tab-expenses">
+    <div class="panel-inner">
+      <div class="ph">
+        <div>
+          <div class="ph-title">Expenses &amp; Staff</div>
+          <div class="ph-sub">Bills, maintenance, salaries &amp; payment calendar</div>
+        </div>
+        <div id="exp-action-btn"></div>
+      </div>
+      <!-- Sub-tabs -->
+      <div style="display:flex;gap:2px;background:var(--surface2);border-radius:var(--r-sm);padding:3px;margin-bottom:20px;width:fit-content">
+        <button class="nav-btn active" id="sub-bills-btn" onclick="showExpSubTab('bills')">Bills &amp; Expenses</button>
+        <button class="nav-btn" id="sub-staff-btn" onclick="showExpSubTab('staff')">Staff &amp; Salaries</button>
+      </div>
+
+      <!-- Bills sub-tab -->
+      <div id="sub-bills">
+        <div class="stats stats-3" id="exp-stats"></div>
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="shiftCalMonth(-1)">‹</button>
+          <div class="cal-nav-title" id="cal-month-title"></div>
+          <button class="cal-nav-btn" onclick="shiftCalMonth(1)">›</button>
+        </div>
+        <div class="cal-legend">
+          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--red)"></div>Bill due</div>
+          <div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--blue)"></div>Salary day</div>
+        </div>
+        <div class="cal-dayname-row">
+          <div class="cal-dayname-cell">Sun</div><div class="cal-dayname-cell">Mon</div><div class="cal-dayname-cell">Tue</div>
+          <div class="cal-dayname-cell">Wed</div><div class="cal-dayname-cell">Thu</div><div class="cal-dayname-cell">Fri</div>
+          <div class="cal-dayname-cell">Sat</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="toolbar">
+          <div class="filter-chips">
+            <span class="chip active" onclick="setExpFilter('all',this)">All</span>
+            <span class="chip" onclick="setExpFilter('overdue',this)">Overdue</span>
+            <span class="chip" onclick="setExpFilter('upcoming',this)">Due soon</span>
+            <span class="chip" onclick="setExpFilter('paid',this)">Paid</span>
+            <span class="chip" onclick="setExpFilter('recurring',this)">Recurring</span>
+          </div>
+        </div>
+        <div id="exp-list"></div>
+      </div>
+
+      <!-- Staff sub-tab -->
+      <div id="sub-staff" style="display:none">
+        <div class="stats stats-3" id="staff-stats"></div>
+        <div id="staff-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- keep tab-staff as hidden alias so showTab('staff') still works -->
+  <div class="tab-panel" id="tab-staff" style="display:none!important"></div>
+
+</div><!-- /main -->
+
+<!-- Receipt Modal -->
+<div class="overlay" id="modal-receipt">
+<div class="modal">
+  <div class="modal-title">Receipt <button class="modal-close" onclick="closeModal('modal-receipt')">✕</button></div>
+  <div class="receipt" id="receipt-body"></div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('modal-receipt')">Close</button>
+    <button class="btn btn-primary" onclick="printReceipt()">🖨 Print</button>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ MODALS ══════════ -->
+
+<!-- Add/Edit Catalogue Product -->
+<div class="overlay" id="modal-cat-product">
+<div class="modal">
+  <div class="modal-title" id="cat-modal-title">Add Product <button class="modal-close" onclick="closeModal('modal-cat-product')">✕</button></div>
+  <div class="form-row">
+    <label class="form-label">Product photo <span style="color:var(--text3);font-weight:400">(optional)</span></label>
+    <div class="photo-upload-wrap" id="cp-photo-wrap" onclick="document.getElementById('cp-photo-inp').click()">
+      <span class="photo-upload-icon">📷</span>
+      <span class="photo-upload-label">Take photo or choose from gallery</span>
+      <div class="photo-overlay"><span>Change photo</span></div>
+    </div>
+    <input type="file" id="cp-photo-inp" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this,'cp-photo-wrap','cp-photo-data')">
+    <input type="hidden" id="cp-photo-data">
+    <button type="button" id="bgbtn-cp-photo-wrap" class="bg-remove-btn" onclick="removeBackground('cp-photo-wrap','cp-photo-data')" style="display:none">✨ Remove background — place on white</button>
+    <div class="bg-sensitivity-row" id="bgsens-cp-photo-wrap">
+      <label><span>Background sensitivity</span><span id="bgsens-val-cp-photo-wrap">40</span></label>
+      <input type="range" min="10" max="100" value="40" id="bgslider-cp-photo-wrap" oninput="document.getElementById('bgsens-val-cp-photo-wrap').textContent=this.value">
+      <div class="bg-sensitivity-hint">Lower = remove less · Higher = remove more · Tap button again to apply</div>
+    </div>
+  </div>
+  <div class="form-row"><label class="form-label">Product name *</label><input class="form-inp" id="cp-name" placeholder="e.g. Basmati Rice 5kg"></div>
+  <div class="form-row"><label class="form-label">Description / notes</label><input class="form-inp" id="cp-desc" placeholder="e.g. Red label, 500ml — helps tell similar products apart"></div>
+  <div class="form-grid-2">
+    <div class="form-row">
+      <label class="form-label">Category</label>
+      <input class="form-inp" id="cp-cat" placeholder="Select or type..." list="cat-options" autocomplete="off">
+      <datalist id="cat-options">
+        <option value="Rice & Grains">
+        <option value="Flour & Baking">
+        <option value="Sugar & Sweeteners">
+        <option value="Salt & Spices">
+        <option value="Cooking Oil & Ghee">
+        <option value="Canned & Preserved Foods">
+        <option value="Dhal & Pulses">
+        <option value="Noodles & Pasta">
+        <option value="Biscuits & Snacks">
+        <option value="Bread & Bakery">
+        <option value="Dairy & Eggs">
+        <option value="Milk & Milk Powder">
+        <option value="Beverages & Juices">
+        <option value="Soft Drinks & Water">
+        <option value="Tea & Coffee">
+        <option value="Frozen Foods">
+        <option value="Fresh Produce">
+        <option value="Meat & Seafood">
+        <option value="Condiments & Sauces">
+        <option value="Cleaning Products">
+        <option value="Personal Care">
+        <option value="Baby Products">
+        <option value="Medical & Health">
+        <option value="Stationery">
+        <option value="Household Items">
+        <option value="Cigarettes & Tobacco">
+        <option value="Confectionery & Sweets">
+        <option value="Ice Cream & Desserts">
+        <option value="Pet Food">
+        <option value="Other">
+      </datalist>
+    </div>
+    <div class="form-row"><label class="form-label">Unit</label>
+      <input class="form-inp" id="cp-unit" placeholder="Select or type..." list="unit-options" autocomplete="off">
+      <datalist id="unit-options">
+        <option value="packs"><option value="bags"><option value="bottles">
+        <option value="tins"><option value="cans"><option value="boxes">
+        <option value="sachets"><option value="loaves"><option value="trays">
+        <option value="kg"><option value="g"><option value="ml"><option value="L">
+        <option value="pieces"><option value="units"><option value="rolls">
+        <option value="sheets"><option value="pairs"><option value="sets">
+      </datalist>
+    </div>
+  </div>
+  <div class="form-row"><label class="form-label">Selling price (LKR) *</label><input class="form-inp" id="cp-price" type="number" placeholder="0"></div>
+  <div class="form-row">
+    <label class="form-label">Barcode <span style="color:var(--text3);font-weight:400">(optional — scan or type the number)</span></label>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input class="form-inp" id="cp-barcode" placeholder="e.g. 4890008100309" style="font-family:var(--mono);flex:1">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="document.getElementById('cp-barcode').focus();document.getElementById('cp-barcode').select();toast('Point scanner at barcode now...')">📷 Scan</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:4px">Tip: click Scan, then point your barcode scanner at the product — it will fill in automatically</div>
+  </div>
+  <input type="hidden" id="cp-id">
+  <div class="modal-actions">
+    <button class="btn btn-danger btn-sm" id="cp-delete-btn" onclick="deleteCatalogueProduct()" style="display:none">Delete</button>
+    <button class="btn btn-ghost" onclick="closeModal('modal-cat-product')">Cancel</button>
+    <button class="btn btn-primary" id="cp-save-btn" onclick="saveCatalogueProduct()">Add Product</button>
+  </div>
+</div>
+</div>
+
+<!-- Add Supplier -->
+<div class="overlay" id="modal-add-supplier">
+<div class="modal modal-lg">
+  <div class="modal-title">Add Supplier <button class="modal-close" onclick="closeModal('modal-add-supplier')">✕</button></div>
+  <div class="form-row"><label class="form-label">Supplier name *</label><input class="form-inp" id="s-name" placeholder="e.g. Silva Distributors"></div>
+  <div class="form-grid-2">
+    <div class="form-row"><label class="form-label">Contact person</label><input class="form-inp" id="s-contact" placeholder="Full name"></div>
+    <div class="form-row"><label class="form-label">Phone *</label><input class="form-inp" id="s-phone" placeholder="07X XXX XXXX"></div>
+  </div>
+  <div class="form-row"><label class="form-label">Credit terms</label>
+    <select class="form-select" id="s-credit" onchange="toggleCreditDays()">
+      <option value="full">Full credit — pay after delivery</option>
+      <option value="partial">Partial credit — part now, rest later</option>
+      <option value="upfront">Upfront / COD — pay before delivery</option>
+    </select>
+  </div>
+  <div class="form-row" id="s-days-row"><label class="form-label">Credit period (days)</label><input class="form-inp" id="s-days" type="number" placeholder="30" value="30"></div>
+  <div class="form-row"><label class="form-label">Notes</label><input class="form-inp" id="s-notes" placeholder="Delivery day, special terms..."></div>
+  <div class="form-row">
+    <label class="form-label">Products &amp; cost prices</label>
+    <div id="s-prod-list" style="margin-bottom:8px;border:1px solid var(--border);border-radius:var(--r-sm);padding:4px"></div>
+    <button class="btn btn-ghost btn-sm" type="button" onclick="addSupplierProductRow()">+ Pick from catalogue</button>
+    <div style="font-size:11px;color:var(--text3);margin-top:5px">You can also add products later from the supplier card</div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('modal-add-supplier')">Cancel</button>
+    <button class="btn btn-primary" onclick="saveSupplier()">Save Supplier</button>
+  </div>
+</div>
+</div>
+
+<!-- Edit Supplier -->
+<div class="overlay" id="modal-edit-supplier">
+<div class="modal modal-lg">
+  <div class="modal-title">Edit Supplier <button class="modal-close" onclick="closeModal('modal-edit-supplier')">✕</button></div>
+  <div class="form-row"><label class="form-label">Supplier name *</label><input class="form-inp" id="es-name"></div>
+  <div class="form-grid-2">
+    <div class="form-row"><label class="form-label">Contact person</label><input class="form-inp" id="es-contact"></div>
+    <div class="form-row"><label class="form-label">Phone *</label><input class="form-inp" id="es-phone"></div>
+  </div>
+  <div class="form-row"><label class="form-label">Credit terms</label>
+    <select class="form-select" id="es-credit" onchange="toggleEditCreditDays()">
+      <option value="full">Full credit</option>
+      <option value="partial">Partial credit</option>
+      <option value="upfront">Upfront / COD</option>
+    </select>
+  </div>
+  <div class="form-row" id="es-days-row"><label class="form-label">Credit period (days)</label><input class="form-inp" id="es-days" type="number"></div>
+  <div class="form-row"><label class="form-label">Notes</label><input class="form-inp" id="es-notes"></div>
+  <div class="form-row">
+    <label class="form-label">Products &amp; cost prices</label>
+    <div id="es-prod-list" style="margin-bottom:8px;border:1px solid var(--border);border-radius:var(--r-sm);padding:4px"></div>
+    <button class="btn btn-ghost btn-sm" type="button" onclick="addEditSupplierProductRow()">+ Pick from catalogue</button>
+  </div>
+  <input type="hidden" id="es-id">
+  <div class="modal-actions">
+    <button class="btn btn-danger btn-sm" onclick="deleteSupplier()">Delete</button>
+    <button class="btn btn-ghost" onclick="closeModal('modal-edit-supplier')">Cancel</button>
+    <button class="btn btn-primary" onclick="updateSupplier()">Save Changes</button>
+  </div>
+</div>
+</div>
+
+<!-- Add Product (Inventory) -->
+<div class="overlay" id="modal-add-product">
+<div class="modal">
+  <div class="modal-title">Add to Inventory <button class="modal-close" onclick="closeModal('modal-add-product')">✕</button></div>
+  <!-- Selected product from catalogue -->
+  <div class="form-row">
+    <label class="form-label">Product *</label>
+    <div id="p-cat-selected" style="display:none;padding:10px 12px;background:var(--surface2);border-radius:var(--r-sm);border:1px solid var(--border);margin-bottom:6px;display:none">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="p-cat-thumb" style="width:36px;height:36px;border-radius:5px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;overflow:hidden"></div>
+        <div style="flex:1">
+          <div id="p-cat-name" style="font-size:13px;font-weight:600;color:var(--text)"></div>
+          <div id="p-cat-meta" style="font-size:11px;color:var(--text3)"></div>
+        </div>
+        <button class="btn btn-ghost btn-xs" onclick="clearInvProduct()">Change</button>
+      </div>
+    </div>
+    <button class="btn btn-ghost" id="p-pick-btn" onclick="pickInvProduct()" style="width:100%;justify-content:center">🔍 Pick from catalogue</button>
+    <input type="hidden" id="p-catalogue-id">
+    <input type="hidden" id="p-name">
+    <input type="hidden" id="p-unit">
+    <input type="hidden" id="p-photo-data">
+    <input type="hidden" id="p-desc">
+  </div>
+  <div class="form-grid-2">
+    <div class="form-row"><label class="form-label">Current stock *</label><input class="form-inp" id="p-stock" type="number" placeholder="0" value="0"></div>
+    <div class="form-row"><label class="form-label">Min stock (reorder point)</label><input class="form-inp" id="p-min" type="number" placeholder="10" value="10"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('modal-add-product')">Cancel</button>
+    <button class="btn btn-primary" onclick="saveProduct()">Add to Inventory</button>
+  </div>
+</div>
+</div>
+
+<!-- Edit Product -->
+<div class="overlay" id="modal-edit-product">
+<div class="modal">
+  <div class="modal-title">Edit Product <button class="modal-close" onclick="closeModal('modal-edit-product')">✕</button></div>
+  <div class="form-row">
+    <label class="form-label">Product photo</label>
+    <div class="photo-upload-wrap" id="ep-photo-wrap" onclick="document.getElementById('ep-photo-inp').click()">
+      <span class="photo-upload-icon">📷</span>
+      <span class="photo-upload-label">Take photo or choose from gallery</span>
+      <div class="photo-overlay"><span>Change photo</span></div>
+    </div>
+    <input type="file" id="ep-photo-inp" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this,'ep-photo-wrap','ep-photo-data')">
+    <input type="hidden" id="ep-photo-data">
+    <button type="button" id="bgbtn-ep-photo-wrap" class="bg-remove-btn" onclick="removeBackground('ep-photo-wrap','ep-photo-data')" style="display:none">✨ Remove background — place on white</button>
+    <div class="bg-sensitivity-row" id="bgsens-ep-photo-wrap">
+      <label><span>Background sensitivity</span><span id="bgsens-val-ep-photo-wrap">40</span></label>
+      <input type="range" min="10" max="100" value="40" id="bgslider-ep-photo-wrap" oninput="document.getElementById('bgsens-val-ep-photo-wrap').textContent=this.value">
+      <div class="bg-sensitivity-hint">Lower = remove less · Higher = remove more · Tap button again to apply</div>
+    </div>
+  </div>
+  <div class="form-row"><label class="form-label">Product name *</label><input class="form-inp" id="ep-name"></div>
+  <div class="form-row"><label class="form-label">Description / notes</label><input class="form-inp" id="ep-desc" placeholder="e.g. Red label, 500ml — NOT the blue one"></div>
+  <div class="form-grid-2">
+    <div class="form-row"><label class="form-label">Current stock</label><input class="form-inp" id="ep-stock" type="number"></div>
+    <div class="form-row"><label class="form-label">Min stock</label><input class="form-inp" id="ep-min" type="number"></div>
+  </div>
+  <div class="form-grid-2">
+    <div class="form-row"><label class="form-label">Unit</label><input class="form-inp" id="ep-unit"></div>
+    <div class="form-row"><label class="form-label">Supplier</label><select class="form-select" id="ep-supplier"></select></div>
+  </div>
+  <div class="form-row"><label class="form-label">Cost price (LKR)</label><input class="form-inp" id="ep-cost" type="number"></div>
+  <input type="hidden" id="ep-id">
+  <div class="modal-actions">
+    <button class="btn btn-danger btn-sm" onclick="deleteProduct()">Delete</button>
+    <button class="btn btn-ghost" onclick="closeModal('modal-edit-product')">Cancel</button>
+    <button class="btn btn-primary" onclick="updateProduct()">Save Changes</button>
+  </div>
+</div>
+</div>
+
+<!-- Add Expense -->
+<div class="overlay" id="modal-add-expense">
+<div class="modal">
+  <div class="modal-title">Add Expense / Bill <button class="modal-close" onclick="closeModal('modal-add-expense')">✕</button></div>
+  <div class="form-row"><label class="form-label">Name *</label><input class="form-inp" id="e-name" placeholder="e.g. Electricity bill, Rent"></div>
+  <div class="form-grid-2">
+    <div class="form-row"><label class="form-label">Amount (LKR) *</label><input class="form-inp" id="e-amount" type="number" placeholder="0"></div>
+    <div class="form-row"><label class="form-label">Category</label>
+      <select class="form-select" id="e-cat">
+        <option value="utility">Utility</option>
+        <option value="rent">Rent</option>
+        <option value="maintenance">Maintenance</option>
+        <option value="salary">Salary</option>
+        <option value="supplier">Supplier payment</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-grid-2">
+    <div class="form-row"><label class="form-label">Due date *</label><input class="form-inp" id="e-due" type="date"></div>
+    <div class="form-row"><label class="form-label">Recurring?</label>
+      <select class="form-select" id="e-recur">
+        <option value="none">One-time</option>
+        <option value="monthly">Monthly</option>
+        <option value="weekly">Weekly</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-row"><label class="form-label">Notes</label><input class="form-inp" id="e-notes" placeholder="Reference number, account details..."></div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('modal-add-expense')">Cancel</button>
+    <button class="btn btn-primary" onclick="saveExpense()">Add Expense</button>
+  </div>
+</div>
+</div>
+
+<!-- Add/Edit Staff -->
+<div class="overlay" id="modal-add-staff">
+<div class="modal">
+  <div class="modal-title" id="st-modal-title">Add Staff Member <button class="modal-close" onclick="closeModal('modal-add-staff')">✕</button></div>
+  <input type="hidden" id="st-id">
+  <div class="form-row"><label class="form-label">Full name *</label><input class="form-inp" id="st-name" placeholder="Full name"></div>
+  <div class="form-grid-2">
+    <div class="form-row"><label class="form-label">Role</label><input class="form-inp" id="st-role" placeholder="Cashier, Manager..."></div>
+    <div class="form-row"><label class="form-label">Phone</label><input class="form-inp" id="st-phone" placeholder="07X XXX XXXX"></div>
+  </div>
+  <div class="form-grid-2">
+    <div class="form-row"><label class="form-label">Monthly salary (LKR)</label><input class="form-inp" id="st-salary" type="number" placeholder="0"></div>
+    <div class="form-row"><label class="form-label">Pay day (day of month)</label><input class="form-inp" id="st-payday" type="number" placeholder="1" min="1" max="31"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-danger btn-sm" id="st-delete-btn" onclick="deleteStaff()" style="display:none">Delete</button>
+    <button class="btn btn-ghost" onclick="closeModal('modal-add-staff')">Cancel</button>
+    <button class="btn btn-primary" id="st-save-btn" onclick="saveStaffEdit()">Add Staff</button>
+  </div>
+</div>
+</div>
+
+<!-- Record Payment Modal -->
+<div class="overlay" id="modal-payment">
+<div class="modal">
+  <div class="modal-title" id="pay-title">Record Payment <button class="modal-close" onclick="closeModal('modal-payment')">✕</button></div>
+  <div id="pay-balance-box" style="padding:14px 16px;border-radius:var(--r);margin-bottom:16px;border:1px solid"></div>
+  <div class="form-row">
+    <label class="form-label">Amount paid (LKR) *</label>
+    <input class="form-inp" id="pay-amount" type="number" placeholder="0" oninput="updatePayPreview()">
+  </div>
+  <div id="pay-after" style="font-size:12px;color:var(--text3);margin:-8px 0 12px;min-height:18px"></div>
+  <div class="form-row">
+    <label class="form-label">Payment method</label>
+    <select class="form-select" id="pay-method">
+      <option value="cash">Cash</option>
+      <option value="bank">Bank transfer</option>
+      <option value="cheque">Cheque</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label class="form-label">Reference / note <span style="color:var(--text3);font-weight:400">(optional)</span></label>
+    <input class="form-inp" id="pay-ref" placeholder="e.g. cheque no. 001234, transfer ref...">
+  </div>
+  <div id="pay-history-wrap" style="max-height:200px;overflow-y:auto"></div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('modal-payment')">Cancel</button>
+    <button class="btn btn-primary" onclick="confirmPayment()">Record Payment</button>
+  </div>
+</div>
+</div>
+
+<!-- Order Sheet -->
+<div class="overlay" id="modal-order">
+<div class="modal modal-lg">
+  <div class="modal-title" id="order-title">Create Order <button class="modal-close" onclick="closeModal('modal-order')">✕</button></div>
+  <div id="order-body"></div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('modal-order')">Cancel</button>
+    <button class="btn btn-primary" onclick="confirmOrder()">✓ Mark as Ordered</button>
+  </div>
+</div>
+</div>
+
+<!-- Record Sales / Stock Deduct -->
+<div class="overlay" id="modal-deduct">
+<div class="modal modal-lg">
+  <div class="modal-title">Record Sales — Deduct Stock <button class="modal-close" onclick="closeModal('modal-deduct')">✕</button></div>
+  <div class="form-row" style="margin-bottom:8px"><div class="ph-sub">Enter quantities sold to deduct from stock</div></div>
+  <div id="deduct-body" style="max-height:55vh;overflow-y:auto;padding-right:4px"></div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('modal-deduct')">Cancel</button>
+    <button class="btn btn-primary" onclick="confirmDeduct()">Deduct Stock</button>
+  </div>
+</div>
+</div>
+
+<!-- Confirm -->
+<div class="overlay" id="modal-confirm">
+<div class="modal confirm-modal">
+  <div class="modal-title" id="confirm-title">Confirm</div>
+  <div class="confirm-msg" id="confirm-msg"></div>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" onclick="closeModal('modal-confirm')">Cancel</button>
+    <button class="btn btn-danger" id="confirm-ok" onclick="">Confirm</button>
+  </div>
+</div>
+</div>
+
+
+<!-- Photo Lightbox -->
+<div id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="Product photo">
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+
+// ══════════════════════════════════════════
+//  PHOTO HELPERS
+// ══════════════════════════════════════════
+// Compress image to max 400px, jpeg quality 0.7 — keeps file small enough for Supabase
+function compressImage(dataUrl, maxDim, quality, callback){
+  const img=new Image();
+  img.onload=()=>{
+    let W=img.width, H=img.height;
+    if(W>maxDim||H>maxDim){
+      const scale=Math.min(maxDim/W,maxDim/H);
+      W=Math.round(W*scale); H=Math.round(H*scale);
+    }
+    const canvas=document.createElement('canvas');
+    canvas.width=W; canvas.height=H;
+    canvas.getContext('2d').drawImage(img,0,0,W,H);
+    callback(canvas.toDataURL('image/jpeg',quality));
+  };
+  img.src=dataUrl;
+}
+
+function previewPhoto(input, wrapId, dataId){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    // Compress to max 400px, 70% quality — keeps size small for Supabase
+    compressImage(e.target.result, 400, 0.7, data=>{
+    document.getElementById(dataId).value=data;
+    const wrap=document.getElementById(wrapId);
+    // Update preview image
+    wrap.querySelectorAll('img.preview').forEach(i=>i.remove());
+    const img=document.createElement('img');
+    img.src=data;img.className='preview';
+    wrap.insertBefore(img,wrap.firstChild);
+    wrap.classList.add('has-photo');
+    // Show the static bg-remove button
+    const btn=document.getElementById('bgbtn-'+wrapId);
+    if(btn){
+      btn.style.display='block';
+      btn.textContent='✨ Remove background — place on white';
+    }
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeBackground(wrapId, dataId){
+  const wrap=document.getElementById(wrapId);
+  const dataEl=document.getElementById(dataId);
+  const currentData=dataEl.value;
+  if(!currentData){toast('Upload a photo first');return;}
+
+  const slider=document.getElementById('bgslider-'+wrapId);
+  const tolerance=slider?parseInt(slider.value):40;
+
+  const sourceImg=new Image();
+  sourceImg.onload=()=>{
+    try{
+      // Downscale large images for performance (max 800px)
+      let W=sourceImg.width, H=sourceImg.height;
+      const maxDim=800;
+      if(W>maxDim||H>maxDim){
+        const scale=Math.min(maxDim/W,maxDim/H);
+        W=Math.round(W*scale); H=Math.round(H*scale);
+      }
+
+      const srcCanvas=document.createElement('canvas');
+      srcCanvas.width=W; srcCanvas.height=H;
+      const srcCtx=srcCanvas.getContext('2d');
+      srcCtx.drawImage(sourceImg,0,0,W,H);
+      const imgData=srcCtx.getImageData(0,0,W,H);
+      const px=imgData.data;
+
+      // ── Flood fill from all 4 edges ──
+      // Mark which pixels are "background" by flood-filling inward
+      // from every edge pixel, only spreading to similar-coloured neighbours
+      const visited=new Uint8Array(W*H); // 0=unvisited, 1=background, 2=product
+      const queue=[];
+
+      function colorAt(idx){
+        return [px[idx*4],px[idx*4+1],px[idx*4+2]];
+      }
+      function colorDist(a,b){
+        return Math.sqrt(
+          Math.pow(a[0]-b[0],2)+
+          Math.pow(a[1]-b[1],2)+
+          Math.pow(a[2]-b[2],2)
+        );
+      }
+
+      // Seed queue with all edge pixels
+      for(let x=0;x<W;x++){queue.push(x);queue.push((H-1)*W+x);}
+      for(let y=1;y<H-1;y++){queue.push(y*W);queue.push(y*W+W-1);}
+      queue.forEach(i=>visited[i]=1);
+
+      // BFS flood fill
+      let head=0;
+      while(head<queue.length){
+        const idx=queue[head++];
+        const c=colorAt(idx);
+        const x=idx%W, y=Math.floor(idx/W);
+        const neighbours=[];
+        if(x>0)neighbours.push(idx-1);
+        if(x<W-1)neighbours.push(idx+1);
+        if(y>0)neighbours.push(idx-W);
+        if(y<H-1)neighbours.push(idx+W);
+        for(const n of neighbours){
+          if(visited[n])continue;
+          const nc=colorAt(n);
+          if(colorDist(c,nc)<=tolerance){
+            visited[n]=1; // background
+            queue.push(n);
+          }
+        }
+      }
+
+      // Build output: background pixels → white, product pixels → original
+      const outCanvas=document.createElement('canvas');
+      outCanvas.width=W; outCanvas.height=H;
+      const outCtx=outCanvas.getContext('2d');
+      outCtx.fillStyle='#FFFFFF';
+      outCtx.fillRect(0,0,W,H);
+      const outData=outCtx.getImageData(0,0,W,H);
+      const op=outData.data;
+      for(let i=0;i<W*H;i++){
+        if(visited[i]!==1){
+          // Product pixel — copy from source
+          op[i*4]  =px[i*4];
+          op[i*4+1]=px[i*4+1];
+          op[i*4+2]=px[i*4+2];
+          op[i*4+3]=255;
+        }
+        // else background — stays white (already set)
+      }
+      outCtx.putImageData(outData,0,0);
+
+      const finalData=outCanvas.toDataURL('image/jpeg',0.93);
+      dataEl.value=finalData;
+
+      wrap.querySelectorAll('img.preview').forEach(i=>i.remove());
+      const resultImg=document.createElement('img');
+      resultImg.src=finalData; resultImg.className='preview';
+      wrap.insertBefore(resultImg,wrap.firstChild);
+      wrap.classList.add('has-photo');
+
+      const btn=document.getElementById('bgbtn-'+wrapId);
+      if(btn){btn.textContent='✨ Adjust & remove again';btn.style.display='block';}
+      const sensRow=document.getElementById('bgsens-'+wrapId);
+      if(sensRow)sensRow.classList.add('visible');
+
+      toast('✓ Done! Adjust slider if needed and tap again');
+    }catch(e){
+      console.error('BG removal error:',e);
+      toast('Error — try again');
+    }
+  };
+  sourceImg.onerror=()=>toast('Could not load image — try again');
+  sourceImg.src=currentData;
+}
+
+function openLightbox(productId){
+  const products=load('products',[]);
+  const p=products.find(x=>String(x.id)===String(productId));
+  if(!p||!p.photo)return;
+  document.getElementById('lightbox-img').src=p.photo;
+  document.getElementById('lightbox').classList.add('open');
+}
+
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('open');
+}
+
+// ══════════════════════════════════════════
+//  SUPABASE + LOCAL DATA STORE
+// ══════════════════════════════════════════
+const SUPA_URL = 'https://ghjysukwqrrutocqmqnd.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoanlzdWt3cXJydXRvY3FtcW5kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTUwODAsImV4cCI6MjA5NjMzMTA4MH0.DHaEYXGTyca-UezN6CokiwVlir3r9jb2ID_ybyYlNgE';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+let currentUser = null;
+
+// localStorage fallback
+const DB = {
+  get(k){try{return JSON.parse(localStorage.getItem('storeos_'+k))||null}catch{return null}},
+  set(k,v){localStorage.setItem('storeos_'+k,JSON.stringify(v))},
+};
+function load(k,def){return DB.get(k)||def}
+function save(k,v){DB.set(k,v)}
+
+// ── Sync status ──
+async function testConnection(){
+  setSyncStatus('syncing','Testing...');
+  try{
+    // Step 1: can we reach Supabase?
+    const r=await fetch(SUPA_URL+'/rest/v1/',{
+      headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}
+    });
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    // Step 2: are we logged in?
+    if(!currentUser){
+      setSyncStatus('offline','Not signed in');
+      toast('⚠ Reached Supabase but not signed in — please log in',3000);
+      return;
+    }
+    // Step 3: can we read from catalogue?
+    const {data,error}=await supa.from('catalogue').select('count').limit(1);
+    if(error)throw new Error(error.message);
+    setSyncStatus('synced','✓ Synced');
+    toast('✓ Connected! Supabase is working',2500);
+  }catch(e){
+    setSyncStatus('offline','Offline');
+    toast('✗ '+e.message,4000);
+  }
+}
+
+function setSyncStatus(state,msg){
+  const el=document.getElementById('sync-badge');
+  const txt=document.getElementById('sync-text');
+  if(!el||!txt)return;
+  el.className='';
+  el.classList.add(state);
+  if(state==='synced'){
+    const t=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    txt.textContent='Synced '+t;
+  } else if(state==='syncing'){
+    txt.textContent='Syncing...';
+  } else {
+    txt.textContent='Offline';
+  }
+}
+
+// ── Table name map ──
+const TABLES={suppliers:'suppliers',products:'products',orders:'orders',expenses:'expenses',staff:'staff'};
+
+// ── Map local keys to Supabase field names ──
+function toSupa(table, obj){
+  if(table==='suppliers') return {
+    id:obj.supaId||undefined,
+    user_id:currentUser.id,
+    name:obj.name, contact:obj.contact, phone:obj.phone,
+    credit:obj.credit, credit_days:obj.creditDays||0,
+    balance:obj.balance||0, notes:obj.notes||'',
+    pay_history:obj.payHistory||[],
+    products:obj.products||[],
+  };
+  if(table==='products') return {
+    id:obj.supaId||undefined,
+    user_id:currentUser.id,
+    name:obj.name, notes:obj.desc||obj.notes||'',
+    photo:obj.photo||null,
+    stock:obj.stock||0, min:obj.min||10,
+    unit:obj.unit||'units', cost:obj.cost||0,
+    supplier_id:obj.supaSupId||null,
+  };
+  if(table==='orders') return {
+    id:obj.supaId||undefined,
+    user_id:currentUser.id,
+    supplier_id:obj.supaSupId||null,
+    date:obj.date,
+    received_date:obj.receivedDate||null,
+    items:obj.items||[],
+    status:obj.status||'pending',
+  };
+  if(table==='expenses') return {
+    id:obj.supaId||undefined,
+    user_id:currentUser.id,
+    name:obj.name, amount:obj.amount,
+    cat:obj.cat||'other', due:obj.due||null,
+    recur:obj.recur||'none',
+    paid:obj.paid||false, notes:obj.notes||'',
+  };
+  if(table==='staff') return {
+    id:obj.supaId||undefined,
+    user_id:currentUser.id,
+    name:obj.name, role:obj.role||'',
+    phone:obj.phone||'', salary:obj.salary||0,
+    payday:obj.payday||1,
+    paid_this_month:obj.paidThisMonth||false,
+  };
+  if(table==='catalogue') return {
+    id:obj.supaId||undefined,
+    user_id:currentUser.id,
+    name:obj.name,
+    notes:obj.desc||'',
+    cat:obj.cat||'',
+    unit:obj.unit||'units',
+    price:obj.price||0,
+    photo:obj.photo||null,
+    barcode:obj.barcode||null,
+  };
+  if(table==='sales') return {
+    user_id:currentUser.id,
+    items:obj.items||[],
+    total:obj.total||0,
+    payment_method:obj.payment_method||'cash',
+    amount_tendered:obj.amount_tendered||0,
+    change_given:obj.change_given||0,
+  };
+  return obj;
+}
+
+function fromSupa(table, row){
+  if(table==='suppliers') return {
+    id:row.id, supaId:row.id,
+    name:row.name, contact:row.contact||'', phone:row.phone||'',
+    credit:row.credit||'full', creditDays:row.credit_days||0,
+    balance:row.balance||0, notes:row.notes||'',
+    payHistory:row.pay_history||[],
+    products:row.products||[],
+  };
+  if(table==='products') return {
+    id:row.id, supaId:row.id,
+    name:row.name, desc:row.notes||'',
+    photo:row.photo||null,
+    stock:row.stock||0, min:row.min||10,
+    unit:row.unit||'units', cost:row.cost||0,
+    supplier:row.supplier_id||null,
+    supaSupId:row.supplier_id||null,
+  };
+  if(table==='orders') return {
+    id:row.id, supaId:row.id,
+    supplierId:row.supplier_id||null,
+    supaSupId:row.supplier_id||null,
+    date:row.date,
+    receivedDate:row.received_date||null,
+    items:row.items||[],
+    status:row.status||'pending',
+  };
+  if(table==='expenses') return {
+    id:row.id, supaId:row.id,
+    name:row.name, amount:row.amount,
+    cat:row.cat||'other', due:row.due||null,
+    recur:row.recur||'none',
+    paid:row.paid||false, notes:row.notes||'',
+  };
+  if(table==='staff') return {
+    id:row.id, supaId:row.id,
+    name:row.name, role:row.role||'',
+    phone:row.phone||'', salary:row.salary||0,
+    payday:row.payday||1,
+    paidThisMonth:row.paid_this_month||false,
+  };
+  if(table==='catalogue') return {
+    id:row.id, supaId:row.id,
+    name:row.name,
+    desc:row.notes||'',
+    cat:row.cat||'',
+    unit:row.unit||'units',
+    price:row.price||0,
+    photo:row.photo||null,
+    barcode:row.barcode||null,
+  };
+  return row;
+}
+
+// ── Core DB operations ──
+async function dbLoad(table){
+  if(!currentUser){console.warn('dbLoad: no user');return load(table,[]);}
+  try {
+    const {data,error}=await supa.from(table).select('*').eq('user_id',currentUser.id).order('created_at',{ascending:true});
+    if(error)throw error;
+    const mapped=data.map(r=>fromSupa(table,r));
+    save(table,mapped);
+    return mapped;
+  } catch(e){
+    console.warn('dbLoad failed for',table,e.message);
+    return load(table,[]);
+  }
+}
+
+async function dbInsert(table, obj){
+  try {
+    setSyncStatus('syncing','⟳ Saving');
+    const row=toSupa(table,obj);
+    delete row.id;
+    // Photos can be large — if insert fails try without photo
+    let result=await supa.from(table).insert(row).select().single();
+    if(result.error && row.photo){
+      console.warn('Insert failed with photo, retrying without photo');
+      const rowNoPhoto={...row,photo:null};
+      result=await supa.from(table).insert(rowNoPhoto).select().single();
+    }
+    if(result.error)throw result.error;
+    const mapped=fromSupa(table,result.data);
+    // Merge photo back into local mapped object (store locally even if not in Supabase)
+    if(obj.photo&&!result.data.photo)mapped.photo=obj.photo;
+    // Update local cache
+    const items=load(table,[]);
+    items.push(mapped);
+    save(table,items);
+    setSyncStatus('synced','✓ Synced');
+    bumpVersion(); // notify other devices
+    return mapped;
+  } catch(e){
+    setSyncStatus('offline','↻ Offline — saved locally');
+    obj.id=obj.id||(crypto.randomUUID?crypto.randomUUID():(Date.now().toString(36)+Math.random().toString(36).slice(2)));
+    const items=load(table,[]);
+    items.push(obj);
+    save(table,items);
+    return obj;
+  }
+}
+
+async function dbUpdate(table, supaId, changes){
+  try {
+    setSyncStatus('syncing','⟳ Saving');
+    const {error}=await supa.from(table).update(changes).eq('id',supaId).eq('user_id',currentUser.id);
+    if(error)throw error;
+    // Update local cache
+    const items=load(table,[]);
+    const idx=items.findIndex(x=>x.id===supaId||x.supaId===supaId);
+    if(idx>=0)items[idx]={...items[idx],...fromSupa(table,{...toSupa(table,items[idx]),...changes,id:supaId})};
+    save(table,items);
+    setSyncStatus('synced','✓ Synced');
+    bumpVersion(); // notify other devices
+  } catch(e){
+    setSyncStatus('offline','↻ Offline — saved locally');
+    const items=load(table,[]);
+    const idx=items.findIndex(x=>x.id===supaId||x.supaId===supaId);
+    if(idx>=0){items[idx]={...items[idx],...changes};save(table,items);}
+  }
+}
+
+async function dbDelete(table, supaId){
+  try {
+    setSyncStatus('syncing','⟳ Saving');
+    const {error}=await supa.from(table).delete().eq('id',supaId).eq('user_id',currentUser.id);
+    if(error)throw error;
+    const items=load(table,[]).filter(x=>x.id!==supaId&&x.supaId!==supaId);
+    save(table,items);
+    setSyncStatus('synced','✓ Synced');
+    bumpVersion(); // notify other devices
+  } catch(e){
+    setSyncStatus('offline','↻ Offline — saved locally');
+    save(table,load(table,[]).filter(x=>x.id!==supaId&&x.supaId!==supaId));
+  }
+}
+
+async function loadAllData(){
+  const [suppliers,products,orders,expenses,staff,catalogue]=await Promise.all([
+    dbLoad('suppliers'),dbLoad('products'),dbLoad('orders'),
+    dbLoad('expenses'),dbLoad('staff'),dbLoad('catalogue'),
+  ]);
+  return {suppliers,products,orders,expenses,staff,catalogue};
+}
+
+// ── Re-render current visible tab ──
+function refreshCurrentTab(){
+  const activeTab=document.querySelector('.tab-panel.active');
+  if(!activeTab)return;
+  const id=activeTab.id.replace('tab-','');
+  if(id==='dashboard')renderDashboard();
+  else if(id==='products')renderCatalogue();
+  else if(id==='inventory')renderInventory();
+  else if(id==='suppliers')renderSuppliers();
+  else if(id==='expenses'){renderExpenses();renderCalendar();}
+  else if(id==='staff')renderStaff();
+  else if(id==='sales')renderSalesHistory();
+  else if(id==='pos')renderPOSGrid(document.getElementById('pos-search')?.value||'');
+}
+
+// ── Version-based sync (same approach as personal dashboard) ──
+// Each write stamps a _version timestamp in a sync_meta table
+// Poll every 15s — if version changed, reload all data and re-render
+let _lastKnownVersion = null;
+let _isSyncing = false;
+
+async function checkAndSync(){
+  if(!currentUser||!currentUser.id||_isSyncing)return;
+  if(document.visibilityState!=='visible')return;
+  _isSyncing=true;
+  try{
+    // Check latest version from Supabase sync_meta table
+    const {data,error}=await supa
+      .from('sync_meta')
+      .select('version')
+      .eq('user_id',currentUser.id)
+      .single();
+    if(error&&error.code!=='PGRST116'){throw error;}
+    const serverVersion=data?.version||null;
+    if(serverVersion&&serverVersion!==_lastKnownVersion){
+      // Version changed — another device saved something new
+      console.log('[SYNC] Version changed',_lastKnownVersion,'→',serverVersion);
+      _lastKnownVersion=serverVersion;
+      await loadAllData();
+      refreshCurrentTab();
+      setSyncStatus('synced','✓ Synced');
+      if(_lastKnownVersion!==null){
+        // Don't toast on first load
+        toast('🔄 Updated from another device',2000);
+      }
+    } else if(!serverVersion){
+      // No version yet — first time, just load
+      await loadAllData();
+      refreshCurrentTab();
+      setSyncStatus('synced','✓ Synced');
+    } else {
+      // Already up to date
+      setSyncStatus('synced','✓ Synced');
+    }
+  }catch(e){
+    console.warn('[SYNC] Check failed:',e.message);
+    setSyncStatus('offline','Offline');
+  }
+  _isSyncing=false;
+}
+
+// Bump version after any write so other devices know to reload
+async function bumpVersion(){
+  if(!currentUser||!currentUser.id)return;
+  try{
+    const v=Date.now();
+    _lastKnownVersion=v; // update our own known version so we don't reload ourselves
+    await supa.from('sync_meta').upsert(
+      {user_id:currentUser.id,version:v},
+      {onConflict:'user_id'}
+    );
+  }catch(e){
+    console.warn('[SYNC] bumpVersion failed:',e.message);
+  }
+}
+
+// Poll every 15 seconds
+setInterval(checkAndSync, 15000);
+
+// Also sync when tab becomes visible
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&currentUser){
+    checkAndSync();
+  }
+});
+
+// Seed data on first load
+function seedIfEmpty(){
+  if(!DB.get('seeded')){
+    save('suppliers',[
+      {id:1,name:'Silva Distributors',contact:'Roshan Silva',phone:'0771234567',credit:'full',creditDays:30,balance:24500,notes:'Delivers every Tuesday',products:[1,2,3,4]},
+      {id:2,name:'Perera Wholesale',contact:'Nimal Perera',phone:'0712345678',credit:'partial',creditDays:15,balance:11200,notes:'30% upfront on each order',products:[5,6,7]},
+      {id:3,name:'Fresh Farms Lanka',contact:'Suresh Kumar',phone:'0759876543',credit:'upfront',creditDays:0,balance:0,notes:'Cash only. Call before 7am for same-day',products:[8,9,10]},
+      {id:4,name:'Star Beverages',contact:'Dinesh Bandara',phone:'0765432109',credit:'full',creditDays:45,balance:0,notes:'',products:[11,12,13]},
+    ]);
+    save('products',[
+      {id:1,name:'Basmati Rice 5kg',stock:8,min:15,unit:'bags',supplier:1,cost:2200},
+      {id:2,name:'Sugar 1kg',stock:4,min:20,unit:'packs',supplier:1,cost:220},
+      {id:3,name:'Salt 500g',stock:22,min:30,unit:'packs',supplier:1,cost:85},
+      {id:4,name:'Coconut Oil 1L',stock:6,min:10,unit:'bottles',supplier:1,cost:680},
+      {id:5,name:'Dhal 500g',stock:18,min:25,unit:'packs',supplier:2,cost:260},
+      {id:6,name:'Canned Fish 425g',stock:30,min:40,unit:'tins',supplier:2,cost:380},
+      {id:7,name:'Biscuits Assorted',stock:12,min:20,unit:'boxes',supplier:2,cost:420},
+      {id:8,name:'Eggs (tray of 30)',stock:5,min:10,unit:'trays',supplier:3,cost:1050},
+      {id:9,name:'Milk 1L',stock:14,min:20,unit:'packets',supplier:3,cost:290},
+      {id:10,name:'Bread Loaf',stock:8,min:12,unit:'loaves',supplier:3,cost:180},
+      {id:11,name:'Water Bottles 500ml',stock:48,min:60,unit:'bottles',supplier:4,cost:55},
+      {id:12,name:'Juice Tetra 200ml',stock:36,min:50,unit:'packs',supplier:4,cost:90},
+      {id:13,name:'Soft Drinks 1.5L',stock:20,min:24,unit:'bottles',supplier:4,cost:260},
+    ]);
+    const today = new Date();
+    const fmt = d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const addDays = (d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+    save('expenses',[
+      {id:1,name:'Electricity Bill',amount:18500,cat:'utility',due:fmt(addDays(today,3)),recur:'monthly',paid:false,notes:'CEB account 4421-8'},
+      {id:2,name:'Store Rent',amount:45000,cat:'rent',due:fmt(addDays(today,8)),recur:'monthly',paid:false,notes:''},
+      {id:3,name:'Internet (SLT)',amount:3500,cat:'utility',due:fmt(addDays(today,-2)),recur:'monthly',paid:false,notes:''},
+      {id:4,name:'Refrigerator Service',amount:8000,cat:'maintenance',due:fmt(addDays(today,15)),recur:'none',paid:false,notes:'Annual service'},
+      {id:5,name:'Water Bill',amount:2200,cat:'utility',due:fmt(addDays(today,5)),recur:'monthly',paid:true,notes:''},
+    ]);
+    save('staff',[
+      {id:1,name:'Kumari Perera',role:'Cashier',phone:'0774567890',salary:35000,payday:1,paidThisMonth:false},
+      {id:2,name:'Saman Dissanayake',role:'Store Assistant',phone:'0761234567',salary:28000,payday:1,paidThisMonth:true},
+    ]);
+    save('orders',[
+      {id:1,supplierId:1,date:'2026-05-28',items:[{name:'Sugar 1kg',qty:30},{name:'Salt 500g',qty:20}],status:'received'},
+      {id:2,supplierId:2,date:'2026-06-01',items:[{name:'Dhal 500g',qty:25},{name:'Canned Fish',qty:20}],status:'pending'},
+    ]);
+    DB.set('seeded',true);
+  }
+}
+
+// ══════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════
+let nextId = ()=>Date.now();
+function toast(msg,dur=2500,html=false){
+  const t=document.getElementById('toast');
+  if(html)t.innerHTML=msg;else t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),dur);
+}
+function hideToast(){
+  const t=document.getElementById('toast');
+  clearTimeout(t._timer);
+  t.classList.remove('show');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+function openModal(id){document.getElementById(id).classList.add('open')}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o&&!document.getElementById('cat-picker-overlay'))o.classList.remove('open')}));
+
+function fmtDate(s){
+  if(!s)return'—';
+  const d=new Date(s+'T00:00:00');
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+}
+function daysUntil(s){
+  const today=new Date();today.setHours(0,0,0,0);
+  const d=new Date(s+'T00:00:00');
+  return Math.round((d-today)/(1000*60*60*24));
+}
+function creditBadge(c){
+  if(c==='full') return '<span class="badge badge-green">Full credit</span>';
+  if(c==='partial') return '<span class="badge badge-amber">Partial credit</span>';
+  return '<span class="badge badge-blue">Upfront/COD</span>';
+}
+function catIcon(c){
+  return{utility:'⚡',rent:'🏠',maintenance:'🔧',salary:'👤',supplier:'🚚',other:'📋'}[c]||'📋';
+}
+
+// ══════════════════════════════════════════
+//  TAB NAVIGATION
+// ══════════════════════════════════════════
+function showTab(tab){
+  if(tab==='staff'){showTab('expenses');showExpSubTab('staff');return;}
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.mob-nav-btn').forEach(b=>b.classList.remove('active'));
+  const panel=document.getElementById('tab-'+tab);
+  if(panel)panel.classList.add('active');
+  const tabs=['dashboard','pos','products','inventory','suppliers','expenses'];
+  const btns=[...document.querySelectorAll('.nav-btn')];
+  btns[tabs.indexOf(tab)]?.classList.add('active');
+  const mobBtn=document.getElementById('mob-'+(tab==='sales'?'pos':tab));
+  if(mobBtn)mobBtn.classList.add('active');
+  // Scroll mobile nav to show active button
+  if(mobBtn)mobBtn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  if(tab==='dashboard')renderDashboard();
+  if(tab==='pos')initPOS();
+  if(tab==='sales')renderSalesHistory();
+  if(tab==='products')renderCatalogue();
+  if(tab==='inventory')renderInventory();
+  if(tab==='suppliers')renderSuppliers();
+  if(tab==='expenses'){showExpSubTab('bills');renderExpenses();renderCalendar();}
+}
+
+let currentExpSubTab='bills';
+function showExpSubTab(sub){
+  currentExpSubTab=sub;
+  document.getElementById('sub-bills').style.display=sub==='bills'?'block':'none';
+  document.getElementById('sub-staff').style.display=sub==='staff'?'block':'none';
+  document.getElementById('sub-bills-btn').classList.toggle('active',sub==='bills');
+  document.getElementById('sub-staff-btn').classList.toggle('active',sub==='staff');
+  // Update add button
+  const btn=document.getElementById('exp-action-btn');
+  if(sub==='bills') btn.innerHTML='<button class="btn btn-primary" onclick="openAddExpense()">+ Add Expense</button>';
+  else btn.innerHTML='<button class="btn btn-primary" onclick="openAddStaff()">+ Add Staff</button>';
+  if(sub==='bills'){renderExpenses();renderCalendar();}
+  if(sub==='staff')renderStaff();
+}
+
+// ══════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════
+function renderDashboard(){
+  const now=new Date();
+  const hrs=now.getHours();
+  const greeting=hrs<12?'Good morning':hrs<17?'Good afternoon':'Good evening';
+  document.getElementById('dash-greeting').textContent=greeting;
+  document.getElementById('dash-date').textContent=now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  const products=load('products',[]);
+  const suppliers=load('suppliers',[]);
+  const expenses=load('expenses',[]);
+  const staff=load('staff',[]);
+
+  const lowItems=products.filter(p=>p.stock<p.min);
+  const totalOwed=suppliers.reduce((a,s)=>a+s.balance,0);
+  const overdueExp=expenses.filter(e=>!e.paid&&daysUntil(e.due)<0);
+  const upcomingExp=expenses.filter(e=>!e.paid&&daysUntil(e.due)>=0&&daysUntil(e.due)<=7);
+
+  const today=new Date().toISOString().split('T')[0];
+  const sales=load('sales',[]);
+  const todaySales=sales.filter(s=>(s.created_at||'').startsWith(today));
+  const todayTotal=todaySales.reduce((a,s)=>a+(s.total||0),0);
+  const cashTotal=todaySales.filter(s=>s.payment_method==='cash').reduce((a,s)=>a+(s.total||0),0);
+  const cardTotal=todaySales.filter(s=>s.payment_method==='card').reduce((a,s)=>a+(s.total||0),0);
+  const creditTotal=todaySales.filter(s=>s.payment_method==='credit').reduce((a,s)=>a+(s.total||0),0);
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat-card" style="cursor:pointer;border-color:var(--green-mid)" onclick="showTab('sales')">
+      <div class="stat-val" style="color:var(--green)">LKR ${todayTotal.toLocaleString()}</div>
+      <div class="stat-label">Today's sales</div>
+      <div class="stat-sub">${todaySales.length} sale(s)${cashTotal?' · 💵 '+cashTotal.toLocaleString():''}${cardTotal?' · 💳 '+cardTotal.toLocaleString():''}${creditTotal?' · 📒 '+creditTotal.toLocaleString():''}</div>
+    </div>
+    <div class="stat-card"><div class="stat-val" style="color:${lowItems.length>0?'var(--red)':'var(--green)'}">${lowItems.length}</div><div class="stat-label">Low stock</div><div class="stat-sub">${products.length} total products</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:${totalOwed>0?'var(--amber)':'var(--green)'}">LKR ${(totalOwed/1000).toFixed(1)}k</div><div class="stat-label">Owed to suppliers</div><div class="stat-sub">${suppliers.filter(s=>s.balance>0).length} supplier(s)</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:${overdueExp.length>0?'var(--red)':'var(--text)'}">${overdueExp.length}</div><div class="stat-label">Overdue bills</div><div class="stat-sub">${upcomingExp.length} due this week</div></div>
+  `;
+
+  // Alerts
+  let alerts='';
+  lowItems.slice(0,4).forEach(p=>{
+    const sup=suppliers.find(s=>s.id===p.supplier);
+    alerts+=`<div class="alert-item red"><div class="alert-dot red"></div><div class="alert-text"><b>${p.name}</b> — only ${p.stock} ${p.unit} left</div><span class="alert-action red" onclick="showTab('inventory')">View</span></div>`;
+  });
+  overdueExp.forEach(e=>{
+    alerts+=`<div class="alert-item red"><div class="alert-dot red"></div><div class="alert-text"><b>${e.name}</b> overdue by ${Math.abs(daysUntil(e.due))} day(s)</div><span class="alert-action red" onclick="showTab('expenses')">Pay</span></div>`;
+  });
+  if(!alerts) alerts='<div style="font-size:12px;color:var(--text3);padding:8px 0">No alerts right now ✓</div>';
+  document.getElementById('dash-alerts').innerHTML=alerts;
+
+  // Upcoming payments
+  let pays='';
+  [...overdueExp,...upcomingExp].slice(0,4).forEach(e=>{
+    const d=daysUntil(e.due);
+    const cls=d<0?'red':'amber';
+    pays+=`<div class="alert-item ${cls}"><div class="alert-dot ${cls}"></div><div class="alert-text"><b>${e.name}</b><br><span style="font-size:11px">${d<0?`Overdue ${Math.abs(d)}d`:`Due in ${d}d`} — LKR ${e.amount.toLocaleString()}</span></div></div>`;
+  });
+  if(!pays) pays='<div style="font-size:12px;color:var(--text3);padding:8px 0">No upcoming payments ✓</div>';
+  document.getElementById('dash-payments').innerHTML=pays;
+
+  // Quick reorder
+  let reorder='';
+  const grouped={};
+  lowItems.forEach(p=>{
+    const sup=suppliers.find(s=>s.id===p.supplier);
+    if(sup){if(!grouped[sup.id])grouped[sup.id]={sup,items:[]};grouped[sup.id].items.push(p);}
+  });
+  Object.values(grouped).slice(0,3).forEach(({sup,items})=>{
+    reorder+=`<div class="alert-item amber"><div class="alert-dot amber"></div><div class="alert-text"><b>${sup.name}</b> — ${items.length} item(s) low</div><span class="alert-action amber" onclick="openOrderSheet(${sup.id})">Order</span></div>`;
+  });
+  if(!reorder) reorder='<div style="font-size:12px;color:var(--text3);padding:8px 0">All stock levels OK ✓</div>';
+  document.getElementById('dash-reorder').innerHTML=reorder;
+
+  // Salary
+  let sal='';
+  staff.filter(s=>!s.paidThisMonth).forEach(s=>{
+    sal+=`<div class="alert-item amber"><div class="alert-dot amber"></div><div class="alert-text"><b>${s.name}</b> — LKR ${s.salary.toLocaleString()}</div><span class="alert-action amber" onclick="markSalaryPaid('${s.id||s.supaId}')">Mark paid</span></div>`;
+  });
+  staff.filter(s=>s.paidThisMonth).forEach(s=>{
+    sal+=`<div class="alert-item green"><div class="alert-dot green"></div><div class="alert-text"><b>${s.name}</b> — paid this month</div></div>`;
+  });
+  if(!sal) sal='<div style="font-size:12px;color:var(--text3);padding:8px 0">No staff added yet</div>';
+  document.getElementById('dash-salary').innerHTML=sal;
+}
+
+// ══════════════════════════════════════════
+//  POS
+// ══════════════════════════════════════════
+let posBill = [];       // [{id, name, price, qty, unit}]
+let posPayMethod = 'cash';
+let lastSaleId = null;
+
+function initPOS(){
+  posBill=[];
+  posPayMethod='cash';
+  renderPOSGrid();
+  renderBill();
+  document.getElementById('pos-search').focus();
+}
+
+function posSearch(q){
+  renderPOSGrid(q);
+}
+
+// Barcode scanner hits Enter after typing number
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&document.activeElement&&document.activeElement.id==='pos-search'){
+    const q=document.getElementById('pos-search').value.trim();
+    if(!q)return;
+    // Try exact barcode match first
+    const catalogue=load('catalogue',[]);
+    const match=catalogue.find(c=>c.barcode===q);
+    if(match){
+      const products=load('products',[]);
+      const inv=products.find(p=>p.catalogueId===match.id||p.name===match.name);
+      addToBill({
+        id:match.id, name:match.name, price:match.price||0,
+        unit:match.unit||'units', photo:match.photo||null,
+        stock:inv?inv.stock:0, invId:inv?inv.id:null,
+      }, true);
+      document.getElementById('pos-search').value='';
+      renderPOSGrid('');
+      return;
+    }
+    // No barcode match — leave search results showing
+  }
+});
+
+function renderPOSGrid(q=''){
+  const products=load('products',[]);
+  const catalogue=load('catalogue',[]);
+  // Build unified product list from catalogue with stock from inventory
+  let items=catalogue.map(c=>{
+    const inv=products.find(p=>p.catalogueId===c.id||p.name===c.name);
+    return {
+      id:c.id, name:c.name, price:c.price||0,
+      unit:c.unit||'units', photo:c.photo||null,
+      stock:inv?inv.stock:0, invId:inv?inv.id:null,
+    };
+  });
+  // Also add inventory items not in catalogue
+  products.forEach(p=>{
+    if(!catalogue.find(c=>c.id===p.catalogueId||c.name===p.name)){
+      items.push({id:p.id,name:p.name,price:0,unit:p.unit||'units',photo:p.photo||null,stock:p.stock,invId:p.id});
+    }
+  });
+  if(q) items=items.filter(p=>p.name.toLowerCase().includes(q.toLowerCase()));
+  const grid=document.getElementById('pos-grid');
+  if(!items.length){
+    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3);font-size:13px">No products found</div>`;return;
+  }
+  grid.innerHTML='';
+  items.forEach(p=>{
+    const inBill=posBill.find(b=>b.id===p.id);
+    const isOut=p.stock<=0;
+    const card=document.createElement('div');
+    card.className='pos-product-card'+(isOut?' out-of-stock':'');
+    card.innerHTML=`
+      ${inBill?`<div class="pos-add-badge">${inBill.qty}</div>`:''}
+      <div class="pos-product-thumb">${p.photo?`<img src="${p.photo}">`:'📦'}</div>
+      <div class="pos-product-name">${p.name}</div>
+      <div class="pos-product-price">${p.price?'LKR '+p.price.toLocaleString():'No price'}</div>
+      <div class="pos-product-stock ${p.stock<5&&p.stock>0?'low':''}">${isOut?'Out of stock':p.stock+' '+p.unit}</div>
+    `;
+    if(!isOut) card.addEventListener('click',()=>addToBill(p));
+    grid.appendChild(card);
+  });
+}
+
+let _lastScanId=null;
+let _lastScanTime=0;
+
+function addToBill(p, fromScan=false){
+  if(!p.price){toast('Set a selling price in the catalogue first');return;}
+  // Double-scan protection — ignore same barcode within 1.5 seconds
+  if(fromScan){
+    const now=Date.now();
+    if(_lastScanId===p.id&&now-_lastScanTime<1500){return;}
+    _lastScanId=p.id;
+    _lastScanTime=now;
+  }
+  const existing=posBill.find(b=>b.id===p.id);
+  const wasNew=!existing;
+  if(existing){existing.qty++;}
+  else{posBill.push({id:p.id,name:p.name,price:p.price,qty:1,unit:p.unit,invId:p.invId});}
+  renderBill();
+  renderPOSGrid(document.getElementById('pos-search').value);
+  // Show undo toast for scanned items
+  if(fromScan){
+    const snapId=p.id;
+    toast(`Added: ${p.name}<button class="toast-undo" onclick="undoScan('${snapId}');hideToast()">Undo</button>`,4000,true);
+  }
+}
+
+function undoScan(id){
+  const item=posBill.find(b=>b.id===id);
+  if(!item)return;
+  if(item.qty>1){item.qty--;}
+  else{posBill=posBill.filter(b=>b.id!==id);}
+  renderBill();
+  renderPOSGrid(document.getElementById('pos-search').value);
+  toast('Undone');
+}
+
+function removeBillItem(id){
+  posBill=posBill.filter(b=>b.id!==id);
+  renderBill();
+  renderPOSGrid(document.getElementById('pos-search').value);
+}
+
+function updateBillQty(id,delta){
+  const item=posBill.find(b=>b.id===id);
+  if(!item)return;
+  item.qty=Math.max(1,item.qty+delta);
+  renderBill();
+  renderPOSGrid(document.getElementById('pos-search').value);
+}
+
+function clearBill(){
+  if(!posBill.length)return;
+  showConfirm('Clear bill?','All items will be removed.',()=>{
+    posBill=[];renderBill();
+    renderPOSGrid(document.getElementById('pos-search').value);
+  });
+}
+
+function renderBill(){
+  const container=document.getElementById('pos-bill-items');
+  const total=posBill.reduce((a,b)=>a+b.price*b.qty,0);
+  const itemCount=posBill.reduce((a,b)=>a+b.qty,0);
+  document.getElementById('pos-item-count').textContent=posBill.length?`${posBill.length} line(s)`:'';
+  document.getElementById('pos-subtotal').textContent='LKR '+total.toLocaleString();
+  document.getElementById('pos-item-total').textContent=itemCount;
+  document.getElementById('pos-grand-total').textContent='LKR '+total.toLocaleString();
+  document.getElementById('pos-charge-btn').disabled=!posBill.length;
+  document.getElementById('pos-charge-btn').textContent=`Charge — LKR ${total.toLocaleString()}`;
+  calcChange();
+  if(!posBill.length){
+    container.innerHTML='<div class="pos-bill-empty">No items yet<br><span style="font-size:11px">Search or scan a product</span></div>';
+    return;
+  }
+  container.innerHTML=posBill.map(item=>`
+    <div class="pos-bill-row">
+      <div style="flex:1;min-width:0">
+        <div class="pos-bill-name">${item.name}</div>
+        <div class="pos-bill-unit-price">LKR ${item.price.toLocaleString()} each</div>
+      </div>
+      <div class="pos-bill-qty">
+        <button class="pos-qty-btn" onclick="updateBillQty('${item.id}',-1)">−</button>
+        <span class="pos-qty-val">${item.qty}</span>
+        <button class="pos-qty-btn" onclick="updateBillQty('${item.id}',1)">+</button>
+      </div>
+      <div class="pos-bill-subtotal">LKR ${(item.price*item.qty).toLocaleString()}</div>
+      <button class="pos-bill-remove" onclick="removeBillItem('${item.id}')">✕</button>
+    </div>`).join('');
+}
+
+function selectPayMethod(m){
+  posPayMethod=m;
+  ['cash','card','credit'].forEach(x=>{
+    document.getElementById('pay-'+x).classList.toggle('selected',x===m);
+  });
+  document.getElementById('pos-cash-section').style.display=m==='cash'?'block':'none';
+  calcChange();
+}
+
+function calcChange(){
+  const total=posBill.reduce((a,b)=>a+b.price*b.qty,0);
+  const cash=parseFloat(document.getElementById('pos-cash-inp').value)||0;
+  const box=document.getElementById('pos-change-box');
+  const label=document.getElementById('pos-change-label');
+  const amount=document.getElementById('pos-change-amount');
+  if(posPayMethod==='cash'&&cash>0){
+    const change=cash-total;
+    box.style.display='block';
+    if(change>=0){
+      box.style.background='var(--green-bg)';
+      box.style.border='1px solid var(--green-mid)';
+      label.style.color='var(--green)';
+      label.textContent='Change to give';
+      amount.style.color='var(--green)';
+      amount.textContent='LKR '+change.toLocaleString();
+    } else {
+      box.style.background='var(--red-bg)';
+      box.style.border='1px solid var(--red-mid)';
+      label.style.color='var(--red)';
+      label.textContent='Short by';
+      amount.style.color='var(--red)';
+      amount.textContent='LKR '+Math.abs(change).toLocaleString();
+    }
+  } else {
+    box.style.display='none';
+  }
+}
+
+async function completeSale(){
+  if(!posBill.length)return;
+  const total=posBill.reduce((a,b)=>a+b.price*b.qty,0);
+  const cash=parseFloat(document.getElementById('pos-cash-inp').value)||0;
+  if(posPayMethod==='cash'&&cash<total){
+    toast('Cash received is less than total');return;
+  }
+  const now=new Date();
+  const saleObj={
+    items:posBill.map(b=>({id:b.id,name:b.name,price:b.price,qty:b.qty,unit:b.unit})),
+    total, payment_method:posPayMethod,
+    amount_tendered:posPayMethod==='cash'?cash:total,
+    change_given:posPayMethod==='cash'?Math.max(0,cash-total):0,
+  };
+  // Save to Supabase
+  const saved=await dbInsert('sales',saleObj);
+  lastSaleId=saved?.id||null;
+  // Deduct stock
+  const products=load('products',[]);
+  for(const item of posBill){
+    const p=products.find(x=>x.id===item.invId||x.id===item.id||x.supaId===item.invId||x.catalogueId===item.id||x.name===item.name);
+    if(p){
+      const newStock=Math.max(0,(p.stock||0)-item.qty);
+      p.stock=newStock;
+      await dbUpdate('products',p.id||p.supaId,{stock:newStock});
+    }
+  }
+  save('products',products);
+  // Show receipt
+  showReceipt(saleObj,now);
+  // Clear bill
+  const soldItems=[...posBill];
+  posBill=[];
+  document.getElementById('pos-cash-inp').value='';
+  renderBill();
+  renderPOSGrid(document.getElementById('pos-search').value);
+  renderInventory();
+  renderDashboard();
+  toast(`✓ Sale complete — LKR ${total.toLocaleString()}`);
+}
+
+// Store details — update here if address changes
+const STORE_NAME    = 'Paatty Food City';
+const STORE_ADDRESS = "No. 196, Lower Road, Orr's Hill";
+const STORE_CITY    = 'Trincomalee';
+const STORE_PHONE   = 'T.P - 074 114 7426';
+
+function buildReceiptHTML(sale, date){
+  const d=date||(sale.created_at?new Date(sale.created_at):new Date());
+  // Format: 2026 06 06
+  const pad=n=>String(n).padStart(2,'0');
+  const dateStr=`${d.getFullYear()} ${pad(d.getMonth()+1)} ${pad(d.getDate())}`;
+  const timeStr=d.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+  const methodLabel={cash:'Cash',card:'Card',credit:'Credit'}[sale.payment_method]||sale.payment_method;
+  // Generate bill number from timestamp last 4 digits
+  const billNo=sale.id?sale.id.replace(/-/g,'').slice(-4).toUpperCase():(Date.now()%10000);
+  const subTotal=(sale.items||[]).reduce((a,i)=>a+i.price*i.qty,0);
+  const discount=0;
+  const netTotal=subTotal-discount;
+  const paid=sale.payment_method!=='credit'?(sale.amount_tendered||netTotal):0;
+  const balance=paid-netTotal;
+
+  return `
+    <div class="receipt-header">
+      <div class="receipt-store">${STORE_NAME}</div>
+      <div class="receipt-addr">${STORE_ADDRESS}</div>
+      <div class="receipt-addr">${STORE_CITY}</div>
+      <div class="receipt-addr">${STORE_PHONE}</div>
+    </div>
+    <div class="receipt-meta">
+      <div class="receipt-meta-row"><span>DATE: ${dateStr}</span><span>TIME: ${timeStr}</span></div>
+      <div class="receipt-meta-row"><span>NO #: ${billNo}</span><span>PAYMENT: ${methodLabel}</span></div>
+    </div>
+    <hr class="receipt-divider">
+    <div class="receipt-cols">
+      <span class="col-item">ITEM</span>
+      <span class="col-qty">QTY</span>
+      <span class="col-price">PRICE</span>
+      <span class="col-dis">DIS</span>
+      <span class="col-amt">AMOUNT</span>
+    </div>
+    <hr class="receipt-divider-light">
+    ${(sale.items||[]).map((i,idx)=>`
+      <div class="receipt-line">
+        <span class="col-item">${idx+1} ${i.name}</span>
+        <span class="col-qty">${i.qty}</span>
+        <span class="col-price">${i.price.toFixed(2)}</span>
+        <span class="col-dis">0.00</span>
+        <span class="col-amt">${(i.qty*i.price).toFixed(2)}</span>
+      </div>`).join('')}
+    <hr class="receipt-divider">
+    <div class="receipt-summary-row"><span>SUB TOTAL</span><span>${subTotal.toFixed(2)}</span></div>
+    <div class="receipt-summary-row"><span>DISCOUNT</span><span>${discount.toFixed(2)}</span></div>
+    <hr class="receipt-divider-light">
+    <div class="receipt-summary-row receipt-net"><span>NET TOTAL</span><span>${netTotal.toFixed(2)}</span></div>
+    <hr class="receipt-divider-light">
+    <div class="receipt-summary-row"><span>PAID</span><span>${paid.toFixed(2)}</span></div>
+    <div class="receipt-summary-row receipt-net"><span>BALANCE</span><span>${balance.toFixed(2)}</span></div>
+    <hr class="receipt-divider">
+    <div class="receipt-footer">
+      <div>THANK YOU COME AGAIN</div>
+      <div style="margin-top:4px;font-size:9px">Exchange possible with the proof of sales</div>
+      <div style="font-size:9px">billed within 02 days only.</div>
+    </div>
+  `;
+}
+
+function showReceipt(sale,date){
+  document.getElementById('receipt-body').innerHTML=buildReceiptHTML(sale,date);
+  openModal('modal-receipt');
+}
+
+// ── Thermal paper width: change '80mm' to '58mm' if needed ──
+const THERMAL_WIDTH = '80mm';
+
+function printReceipt(){
+  const sale=getCurrentReceiptSale();
+  const html=document.getElementById('receipt-body').innerHTML;
+  const win=window.open('','_blank','width=400,height=700');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Receipt - Paatty</title>
+  <style>
+    /* ── Change width here: 80mm or 58mm ── */
+    :root{--paper:${THERMAL_WIDTH}}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:'Courier New',Courier,monospace;
+      font-size:12px;color:#000;background:#fff;
+      width:var(--paper);margin:0 auto;
+      padding:4mm 3mm;
+    }
+    .receipt-header{text-align:center;margin-bottom:8px;padding-bottom:8px;border-bottom:2px dashed #000}
+    .receipt-store{font-size:16px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+    .receipt-tagline{font-size:9px;margin-top:2px}
+    .receipt-row{display:flex;justify-content:space-between;padding:1px 0;font-size:11px;gap:4px}
+    .receipt-row span:first-child{flex:1;overflow:hidden}
+    .receipt-row span:last-child{flex-shrink:0;text-align:right}
+    .receipt-item-name{font-size:11px;padding:3px 0 0;font-weight:600}
+    .receipt-item-detail{display:flex;justify-content:space-between;padding:0 0 3px 6px;font-size:11px;border-bottom:1px dotted #ccc}
+    .receipt-divider{border:none;border-top:2px dashed #000;margin:6px 0}
+    .receipt-divider-light{border:none;border-top:1px dashed #999;margin:4px 0}
+    .receipt-total{font-size:14px;font-weight:900}
+    .receipt-footer{text-align:center;font-size:9px;margin-top:8px;padding-top:6px;border-top:1px dashed #999;color:#555}
+    @media print{
+      @page{size:var(--paper) auto;margin:0}
+      body{padding:2mm;width:var(--paper)}
+      /* Hide browser headers/footers */
+    }
+  </style>
+  </head><body>
+  ${html}
+  <script>
+    window.onload=function(){
+      setTimeout(function(){window.print();},300);
+    };
+    window.onafterprint=function(){window.close();};
+  <\/script>
+  </body></html>`);
+  win.document.close();
+}
+
+function getCurrentReceiptSale(){return null;} // placeholder
+
+// ── Sales History ──
+async function renderSalesHistory(){
+  const today=new Date().toISOString().split('T')[0];
+  let sales=load('sales',[]);
+  // Try load from Supabase
+  try{
+    const {data,error}=await supa.from('sales').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(100);
+    if(!error&&data){sales=data;save('sales',data);}
+  }catch(e){}
+  const todaySales=sales.filter(s=>(s.created_at||'').startsWith(today));
+  const todayTotal=todaySales.reduce((a,s)=>a+(s.total||0),0);
+  const todayCount=todaySales.length;
+  document.getElementById('sales-sub').textContent=`Today: ${todayCount} sale(s) · LKR ${todayTotal.toLocaleString()}`;
+  document.getElementById('sales-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-val" style="color:var(--green)">LKR ${(todayTotal/1000).toFixed(1)}k</div><div class="stat-label">Today's sales</div><div class="stat-sub">${todayCount} transactions</div></div>
+    <div class="stat-card"><div class="stat-val">${sales.length}</div><div class="stat-label">Total transactions</div></div>
+    <div class="stat-card"><div class="stat-val">LKR ${sales.length?(sales.reduce((a,s)=>a+(s.total||0),0)/sales.length/1000).toFixed(1)+'k':'0'}</div><div class="stat-label">Avg transaction</div></div>
+  `;
+  const container=document.getElementById('sales-list');
+  if(!sales.length){container.innerHTML='<div class="empty-state"><div class="empty-icon">🧾</div><div class="empty-text">No sales yet</div></div>';return;}
+  container.innerHTML=sales.slice(0,50).map(s=>{
+    const method={cash:'💵',card:'💳',credit:'📒'}[s.payment_method]||'💵';
+    const items=(s.items||[]).map(i=>`${i.name} ×${i.qty}`).join(', ');
+    const dt=new Date(s.created_at);
+    const timeStr=dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+dt.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="sale-row" onclick="showReceipt(${JSON.stringify(s).replace(/"/g,'&quot;')},new Date('${s.created_at}'))">
+      <div class="sale-method" style="background:var(--surface2)">${method}</div>
+      <div class="sale-info"><div class="sale-time">${timeStr}</div><div class="sale-items">${items}</div></div>
+      <div class="sale-total">LKR ${(s.total||0).toLocaleString()}</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  INVENTORY
+// ══════════════════════════════════════════
+let invFilter='all';
+function setInvFilter(f,el){
+  invFilter=f;
+  document.querySelectorAll('#tab-inventory .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderInventory();
+}
+
+function renderInventory(){
+  const products=load('products',[]);
+  const suppliers=load('suppliers',[]);
+  const q=document.getElementById('inv-search')?.value.toLowerCase()||'';
+
+  const low=products.filter(p=>p.stock<p.min).length;
+  const ok=products.filter(p=>p.stock>=p.min).length;
+  const totalVal=products.reduce((a,p)=>a+p.stock*p.cost,0);
+  document.getElementById('inv-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-val">${products.length}</div><div class="stat-label">Products</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--red)">${low}</div><div class="stat-label">Low stock</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--green)">${ok}</div><div class="stat-label">In stock</div></div>
+    <div class="stat-card"><div class="stat-val">LKR ${(totalVal/1000).toFixed(1)}k</div><div class="stat-label">Stock value</div></div>
+  `;
+
+  let list=products.filter(p=>{
+    if(invFilter==='low'&&p.stock>=p.min)return false;
+    if(invFilter==='ok'&&p.stock<p.min)return false;
+    if(q&&!p.name.toLowerCase().includes(q))return false;
+    return true;
+  });
+
+  const container=document.getElementById('inv-list');
+  if(!list.length){
+    container.innerHTML=`<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-text">No products found</div></div>`;return;
+  }
+  container.innerHTML=list.map(p=>{
+    const sup=suppliers.find(s=>s.id===p.supplier);
+    const pct=Math.min(100,Math.round(p.stock/p.min*100));
+    const barCls=pct<50?'low':pct<80?'warn':'ok';
+    const isLow=p.stock<p.min;
+    const thumbHtml=p.photo
+      ?`<div class="inv-thumb" onclick="openLightbox('${p.id}');event.stopPropagation()"><img src="${p.photo}" alt="${p.name}"></div>`
+      :`<div class="inv-thumb" onclick="openEditProduct('${p.id||p.supaId}')"">📦</div>`;
+    return `<div class="inv-row">
+      ${thumbHtml}
+      <div style="flex:1;min-width:0">
+        <div class="inv-name">${p.name}${isLow?`<span class="low-tag">LOW</span>`:''}</div>
+        ${p.desc?`<div class="inv-desc">${p.desc}</div>`:''}
+        <div class="inv-supplier">${sup?sup.name:'—'} · ${p.unit}</div>
+      </div>
+      <div class="inv-price">LKR ${p.cost?p.cost.toLocaleString():'—'}<div style="font-size:10px;color:var(--text3);margin-top:1px">per ${p.unit||'unit'}</div></div>
+      <div class="stock-bar-wrap"><div class="stock-bar ${barCls}" style="width:${pct}%"></div></div>
+      <div class="stock-num ${isLow?'low':''}">${p.stock}/${p.min}</div>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="adjustStock('${p.id||p.supaId}',-1)">−</button>
+        <span class="qty-val">${p.stock}</span>
+        <button class="qty-btn" onclick="adjustStock('${p.id||p.supaId}',1)">+</button>
+      </div>
+      <button class="btn btn-ghost btn-xs" onclick="openEditProduct('${p.id||p.supaId}')" style="margin-left:4px">Edit</button>
+    </div>`;
+  }).join('');
+}
+
+async function adjustStock(id,delta){
+  const products=load('products',[]);
+  const p=products.find(x=>x.id===id||x.supaId===id);
+  if(!p)return;
+  p.stock=Math.max(0,p.stock+delta);
+  save('products',products);
+  renderInventory();renderDashboard();
+  await dbUpdate('products',p.id||p.supaId,{stock:p.stock});
+  if(p.stock<p.min)toast(`⚠ ${p.name} is now low!`);
+}
+
+function openAddProduct(){
+  clearInvProduct();
+  document.getElementById('p-stock').value='0';
+  document.getElementById('p-min').value='10';
+  openModal('modal-add-product');
+}
+
+function pickInvProduct(){
+  openCatPicker(p=>{
+    document.getElementById('p-catalogue-id').value=p.id||p.name;
+    document.getElementById('p-name').value=p.name;
+    document.getElementById('p-unit').value=p.unit||'units';
+    document.getElementById('p-photo-data').value=p.photo||'';;
+    document.getElementById('p-desc').value=p.desc||'';;
+    // Show selected product card
+    const sel=document.getElementById('p-cat-selected');
+    sel.style.display='block';
+    document.getElementById('p-pick-btn').style.display='none';
+    const thumb=document.getElementById('p-cat-thumb');
+    thumb.innerHTML=p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:5px">`:`📦`;
+    document.getElementById('p-cat-name').textContent=p.name;
+    document.getElementById('p-cat-meta').textContent=(p.unit||'units')+(p.price?' · LKR '+p.price.toLocaleString()+' selling price':'');
+  });
+}
+
+function clearInvProduct(){
+  document.getElementById('p-catalogue-id').value='';
+  document.getElementById('p-name').value='';
+  document.getElementById('p-cat-selected').style.display='none';
+  document.getElementById('p-pick-btn').style.display='flex';
+}
+
+async function saveProduct(){
+  const name=document.getElementById('p-name').value.trim();
+  if(!name)return toast('Pick a product from the catalogue first');
+  const obj={
+    name,
+    catalogueId:document.getElementById('p-catalogue-id').value,
+    desc:document.getElementById('p-desc').value,
+    photo:document.getElementById('p-photo-data').value||null,
+    stock:parseInt(document.getElementById('p-stock').value)||0,
+    min:parseInt(document.getElementById('p-min').value)||10,
+    unit:document.getElementById('p-unit').value||'units',
+    supplier:null, supaSupId:null, cost:0,
+  };
+  closeModal('modal-add-product');
+  await dbInsert('products',obj);
+  renderInventory();
+  toast('Added to inventory');
+}
+
+function openEditProduct(id){
+  const products=load('products',[]);
+  const suppliers=load('suppliers',[]);
+  const p=products.find(x=>String(x.id)===String(id)||String(x.supaId)===String(id));
+  if(!p){console.warn('openEditProduct: product not found for id',id,'available ids:',products.map(x=>x.id||x.supaId));return;}
+  document.getElementById('ep-id').value=id;
+  document.getElementById('ep-name').value=p.name;
+  document.getElementById('ep-stock').value=p.stock;
+  document.getElementById('ep-min').value=p.min;
+  document.getElementById('ep-unit').value=p.unit;
+  document.getElementById('ep-cost').value=p.cost;
+  document.getElementById('ep-supplier').innerHTML='<option value="">— No supplier —</option>'+suppliers.map(s=>`<option value="${s.id}"${p.supplier===s.id?' selected':''}>${s.name}</option>`).join('');
+  openModal('modal-edit-product');
+}
+
+async function updateProduct(){
+  const id=document.getElementById('ep-id').value;
+  const supId=document.getElementById('ep-supplier').value||null;
+  const changes={
+    name:document.getElementById('ep-name').value.trim(),
+    notes:document.getElementById('ep-desc').value.trim(),
+    photo:document.getElementById('ep-photo-data').value||null,
+    stock:parseInt(document.getElementById('ep-stock').value)||0,
+    min:parseInt(document.getElementById('ep-min').value)||10,
+    unit:document.getElementById('ep-unit').value.trim(),
+    cost:parseInt(document.getElementById('ep-cost').value)||0,
+    supplier_id:supId,
+  };
+  closeModal('modal-edit-product');
+  await dbUpdate('products',id,changes);
+  // Update local cache desc field too
+  const products=load('products',[]);
+  const p=products.find(x=>x.id===id||x.supaId===id);
+  if(p){p.desc=changes.notes;p.supplier=supId;p.supaSupId=supId;save('products',products);}
+  renderInventory();
+  toast('Product updated');
+}
+
+function deleteProduct(){
+  const id=document.getElementById('ep-id').value;
+  showConfirm('Delete product?','This will permanently remove the product.',async()=>{
+    closeModal('modal-edit-product');
+    await dbDelete('products',id);
+    renderInventory();
+    toast('Product deleted');
+  });
+}
+
+// Stock deduct (record sales)
+function openStockDeduct(){
+  const products=load('products',[]);
+  document.getElementById('deduct-body').innerHTML=products.map(p=>`
+    <div class="order-item-row">
+      <div class="order-item-name">${p.name}<div class="order-stock-note">In stock: ${p.stock} ${p.unit}</div></div>
+      <input class="qty-inp" type="number" min="0" value="0" data-id="${p.id}" placeholder="0">
+      <span style="font-size:11px;color:var(--text3)">${p.unit}</span>
+    </div>`).join('');
+  openModal('modal-deduct');
+}
+
+async function confirmDeduct(){
+  const products=load('products',[]);
+  const updates=[];
+  document.querySelectorAll('#deduct-body .qty-inp').forEach(inp=>{
+    const qty=parseInt(inp.value)||0;
+    if(qty>0){
+      const id=inp.dataset.id;
+      const p=products.find(x=>String(x.id)===id||String(x.supaId)===id);
+      if(p){p.stock=Math.max(0,p.stock-qty);updates.push({p,newStock:p.stock});}
+    }
+  });
+  if(!updates.length)return toast('No quantities entered');
+  save('products',products);
+  closeModal('modal-deduct');
+  renderInventory();renderDashboard();
+  for(const {p,newStock} of updates){
+    await dbUpdate('products',p.id||p.supaId,{stock:newStock});
+  }
+  toast(`Stock updated for ${updates.length} product(s)`);
+}
+
+// ══════════════════════════════════════════
+//  SUPPLIERS
+// ══════════════════════════════════════════
+let supFilter='all';
+let openSupId=null;
+
+function setSupFilter(f,el){
+  supFilter=f;
+  document.querySelectorAll('#tab-suppliers .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderSuppliers();
+}
+
+function renderSuppliers(){
+  const suppliers=load('suppliers',[]);
+  const products=load('products',[]);
+  const q=document.getElementById('sup-search')?.value.toLowerCase()||'';
+
+  const totalOwed=suppliers.reduce((a,s)=>a+s.balance,0);
+  const lowItems=products.filter(p=>p.stock<p.min).length;
+  document.getElementById('sup-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-val">${suppliers.length}</div><div class="stat-label">Suppliers</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:${totalOwed>0?'var(--red)':'var(--green)'}">LKR ${(totalOwed/1000).toFixed(1)}k</div><div class="stat-label">Total owed</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:${lowItems>0?'var(--red)':'var(--green)'}">${lowItems}</div><div class="stat-label">Low stock items</div></div>
+    <div class="stat-card"><div class="stat-val">${suppliers.filter(s=>s.credit!=='upfront').length}</div><div class="stat-label">On credit</div></div>
+  `;
+
+  let list=suppliers.filter(s=>{
+    if(supFilter==='full'&&s.credit!=='full')return false;
+    if(supFilter==='partial'&&s.credit!=='partial')return false;
+    if(supFilter==='upfront'&&s.credit!=='upfront')return false;
+    if(supFilter==='owed'&&s.balance<=0)return false;
+    if(q){
+      const supProds=products.filter(p=>s.products&&s.products.includes(p.id));
+      return s.name.toLowerCase().includes(q)||s.contact.toLowerCase().includes(q)||supProds.some(p=>p.name.toLowerCase().includes(q));
+    }
+    return true;
+  });
+
+  const container=document.getElementById('sup-list');
+  if(!list.length){
+    container.innerHTML=`<div class="empty-state"><div class="empty-icon">🚚</div><div class="empty-text">No suppliers found</div></div>`;return;
+  }
+
+  container.innerHTML=list.map(s=>{
+    const sid=String(s.id||s.supaId);
+    // Find products linked to this supplier by EITHER method
+    const supProds=products.filter(p=>{
+      // Method 1: product has supplier_id matching this supplier
+      if(String(p.supplier)===sid||String(p.supaSupId)===sid)return true;
+      // Method 2: supplier has products array containing this product id
+      if(s.products&&Array.isArray(s.products)){
+        return s.products.some(sp=>
+          (typeof sp==='object'&&(String(sp.catalogueId)===String(p.catalogueId)||sp.name===p.name))||
+          String(sp)===String(p.id)||String(sp)===String(p.supaId)
+        );
+      }
+      return false;
+    });
+    const lowProds=supProds.filter(p=>p.stock<p.min);
+    const isOpen=String(openSupId)===String(s.id||s.supaId);
+
+    const productsHtml=supProds.length
+      ?supProds.map(p=>`<div class="product-row"><div class="product-name">${p.name}${p.stock<p.min?'<span class="low-tag">LOW</span>':''}</div><div class="product-stock ${p.stock<p.min?'low':'ok'}">${p.stock}/${p.min} ${p.unit}</div></div>`).join('')
+      :'<div style="font-size:12px;color:var(--text3)">No products linked yet</div>';
+
+    const creditBoxCls=s.credit==='full'?'full':s.credit==='partial'?'partial':'upfront';
+    const creditText=s.credit==='full'?`Full credit — ${s.creditDays} day payment terms`:s.credit==='partial'?`Partial credit — ${s.creditDays} day terms. Part payment on delivery.`:'Cash on delivery — no credit';
+    const orders=load('orders',[]).filter(o=>o.supplierId===s.id);
+
+    return `<div class="card" id="supcard-${s.id}">
+      <div class="card-head" onclick="toggleSup('${s.id}')">
+        <div class="card-avatar">${s.name.substring(0,2).toUpperCase()}</div>
+        <div class="card-info">
+          <div class="card-name">${s.name}${lowProds.length?`<span class="low-tag">${lowProds.length} low</span>`:''}</div>
+          <div class="card-meta">${s.contact} · ${supProds.length} products · ${s.phone}</div>
+        </div>
+        <div class="card-right">
+          ${creditBadge(s.credit)}
+          ${s.balance>0?`<span style="font-size:13px;font-weight:600;font-family:var(--mono);color:var(--red)">LKR ${s.balance.toLocaleString()}</span>`:`<span style="font-size:12px;font-weight:600;color:var(--green)">Settled ✓</span>`}
+          <span class="chevron ${isOpen?'open':''}">▾</span>
+        </div>
+      </div>
+      <div class="card-body ${isOpen?'open':''}" id="supbody-${s.id}">
+        <div class="info-grid">
+          <div>
+            <div class="info-block"><div class="info-label">Contact person</div><div class="info-val">${s.contact}</div></div>
+            <div class="info-block"><div class="info-label">Phone</div><div class="info-val">${s.phone}</div></div>
+            ${s.notes?`<div class="info-block"><div class="info-label">Notes</div><div class="info-val" style="font-size:12px;font-weight:400;color:var(--text2)">${s.notes}</div></div>`:''}
+          </div>
+          <div>
+            <div class="info-block"><div class="info-label">Products (${supProds.length})</div>${productsHtml}</div>
+          </div>
+        </div>
+        <div class="credit-box ${creditBoxCls}">${creditText}</div>
+        ${orders.length?`
+          <div class="sec-label">Recent orders</div>
+          ${orders.slice().reverse().slice(0,5).map(o=>{
+            const products=load('products',[]);
+            const orderVal=o.items.reduce((a,it)=>{const p=products.find(x=>x.id===it.pid||x.name===it.name);return a+(p?p.cost*it.qty:0);},0);
+            const isPending=o.status==='pending';
+            return `<div style="border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:8px;overflow:hidden">
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:${isPending?'var(--amber-bg)':'var(--green-bg)'}">
+                <span style="font-size:11px;font-weight:600;color:${isPending?'var(--amber)':'var(--green)'}">● ${isPending?'PENDING':'RECEIVED'}</span>
+                <span style="font-size:12px;color:var(--text2);flex:1">${o.date}${o.receivedDate?' → received '+o.receivedDate:''}</span>
+                ${orderVal>0?`<span style="font-size:12px;font-family:var(--mono);font-weight:600;color:var(--text)">LKR ${orderVal.toLocaleString()}</span>`:''}
+                ${isPending?`<button class="btn btn-green btn-xs" onclick="markOrderReceived('${o.id||o.supaId}');event.stopPropagation()">Mark received</button>`:''}
+                <button class="btn btn-danger btn-xs" onclick="deleteOrder('${o.id||o.supaId}');event.stopPropagation()">✕</button>
+              </div>
+              <div style="padding:8px 12px;background:var(--surface)">
+                ${o.items.map(it=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border)">
+                  <span style="color:var(--text)">${it.name}</span>
+                  <span style="font-family:var(--mono);color:var(--text2)">× ${it.qty}</span>
+                </div>`).join('')}
+              </div>
+            </div>`;
+          }).join('')}
+        `:''}
+        ${(s.payHistory&&s.payHistory.length)?`
+          <div class="sec-label">Payment history</div>
+          <table class="mini-table">
+            <tr><th>Date</th><th>Amount</th><th>Method</th><th>Reference</th></tr>
+            ${s.payHistory.slice().reverse().slice(0,5).map(h=>`
+              <tr>
+                <td>${h.date}</td>
+                <td style="font-family:var(--mono);color:var(--green);font-weight:600">LKR ${h.amount.toLocaleString()}</td>
+                <td style="text-transform:capitalize">${h.method}</td>
+                <td style="color:var(--text3)">${h.ref||'—'}</td>
+              </tr>`).join('')}
+          </table>`:''}
+        <div class="action-row">
+          <a class="btn btn-green btn-sm" href="tel:${s.phone}">📞 Call ${s.contact}</a>
+          <button class="btn btn-primary btn-sm" onclick="openOrderSheet('${s.id||s.supaId}')">📋 Create Order</button>
+          <button class="btn btn-ghost btn-sm" onclick="openEditSupplier('${s.id||s.supaId}')">Edit</button>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="recordPayment('${s.id||s.supaId}')">${s.balance>0?'Record Payment':'+ Add Payment'}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSup(id){
+  const sid=String(id);
+  // Close all other open cards first
+  document.querySelectorAll('.card-body.open').forEach(b=>{
+    if(b.id!=='supbody-'+sid){
+      b.classList.remove('open');
+      const chev=document.querySelector('#supcard-'+b.id.replace('supbody-','')+ ' .chevron');
+      if(chev)chev.classList.remove('open');
+    }
+  });
+  // Toggle this card
+  const body=document.getElementById('supbody-'+sid);
+  const chev=document.querySelector('#supcard-'+sid+' .chevron');
+  if(body){
+    const isNowOpen=!body.classList.contains('open');
+    body.classList.toggle('open');
+    if(chev)chev.classList.toggle('open',isNowOpen);
+    openSupId=isNowOpen?sid:null;
+  }
+}
+
+function toggleCreditDays(){
+  document.getElementById('s-days-row').style.display=document.getElementById('s-credit').value==='upfront'?'none':'block';
+}
+function toggleEditCreditDays(){
+  document.getElementById('es-days-row').style.display=document.getElementById('es-credit').value==='upfront'?'none':'block';
+}
+
+// openAddSupplier moved above saveSupplier
+
+// Supplier product rows (in Add Supplier modal)
+let supModalProducts=[];
+
+function addSupplierProductRow(){
+  openCatPicker(p=>{
+    // Check not already added
+    if(supModalProducts.find(x=>x.catalogueId===p.id)){toast('Already added');return;}
+    supModalProducts.push({catalogueId:p.id,name:p.name,unit:p.unit||'units',photo:p.photo||null,cost:0});
+    renderSupModalProducts();
+  });
+}
+
+function renderSupModalProducts(){
+  const list=document.getElementById('s-prod-list');
+  if(!supModalProducts.length){list.innerHTML='';return;}
+  list.innerHTML=supModalProducts.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface2);border-radius:var(--r-sm);margin-bottom:5px">
+      <div style="width:28px;height:28px;border-radius:4px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:13px;overflow:hidden;flex-shrink:0">
+        ${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:`📦`}
+      </div>
+      <div style="flex:1;font-size:13px;font-weight:500;color:var(--text)">${p.name}</div>
+      <div style="font-size:11px;color:var(--text3)">Cost LKR</div>
+      <input type="number" placeholder="0" value="${p.cost||''}" style="width:80px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:var(--mono);background:var(--surface)" oninput="supModalProducts[${i}].cost=parseFloat(this.value)||0">
+      <button onclick="supModalProducts.splice(${i},1);renderSupModalProducts()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:2px">✕</button>
+    </div>`).join('');
+}
+
+function openAddSupplier(){
+  supModalProducts=[];
+  ['s-name','s-contact','s-phone','s-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('s-credit').value='full';
+  document.getElementById('s-days').value='30';
+  document.getElementById('s-days-row').style.display='block';
+  renderSupModalProducts();
+  openModal('modal-add-supplier');
+}
+
+async function saveSupplier(){
+  const name=document.getElementById('s-name').value.trim();
+  const phone=document.getElementById('s-phone').value.trim();
+  if(!name||!phone)return toast('Name and phone are required');
+  closeModal('modal-add-supplier');
+  const sup=await dbInsert('suppliers',{
+    name, contact:document.getElementById('s-contact').value.trim(),
+    phone, credit:document.getElementById('s-credit').value,
+    creditDays:parseInt(document.getElementById('s-days').value)||0,
+    balance:0, notes:document.getElementById('s-notes').value.trim(),
+    products:supModalProducts.map(p=>({catalogueId:p.catalogueId,name:p.name,unit:p.unit,cost:p.cost,photo:p.photo})),
+    payHistory:[],
+  });
+  await loadAllData();
+  renderSuppliers();
+  toast('Supplier added');
+}
+
+let editSupModalProducts=[];
+
+function addEditSupplierProductRow(){
+  openCatPicker(p=>{
+    if(editSupModalProducts.find(x=>x.catalogueId===p.id||x.name===p.name)){toast('Already added');return;}
+    editSupModalProducts.push({catalogueId:p.id,name:p.name,unit:p.unit||'units',photo:p.photo||null,cost:0});
+    renderEditSupModalProducts();
+  });
+}
+
+function renderEditSupModalProducts(){
+  const list=document.getElementById('es-prod-list');
+  if(!list)return;
+  if(!editSupModalProducts.length){list.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px">No products linked yet</div>';return;}
+  list.innerHTML=editSupModalProducts.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface2);border-radius:var(--r-sm);margin-bottom:5px">
+      <div style="width:28px;height:28px;border-radius:4px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:13px;overflow:hidden;flex-shrink:0">
+        ${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`:'📦'}
+      </div>
+      <div style="flex:1;font-size:13px;font-weight:500;color:var(--text)">${p.name}</div>
+      <div style="font-size:11px;color:var(--text3)">Cost LKR</div>
+      <input type="number" placeholder="0" value="${p.cost||''}" style="width:80px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:var(--mono);background:var(--surface)" oninput="editSupModalProducts[${i}].cost=parseFloat(this.value)||0">
+      <button onclick="editSupModalProducts.splice(${i},1);renderEditSupModalProducts()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:2px">✕</button>
+    </div>`).join('');
+}
+
+function openEditSupplier(id){
+  const suppliers=load('suppliers',[]);
+  const products=load('products',[]);
+  const s=suppliers.find(x=>String(x.id)===String(id)||String(x.supaId)===String(id));
+  if(!s){console.warn('openEditSupplier: not found for id',id);return;}
+  const sid=String(s.id||s.supaId);
+  // Load linked products from products table (primary source)
+  const supProds=products.filter(p=>
+    String(p.supplier)===sid||String(p.supaSupId)===sid
+  );
+  // Also include products stored in supplier JSONB that arent in products table yet
+  const jsonbProds=(s.products&&Array.isArray(s.products))?s.products.filter(sp=>{
+    if(typeof sp!=='object'||!sp.name)return false;
+    return !supProds.find(p=>p.name===sp.name);
+  }):[];
+  editSupModalProducts=[
+    ...supProds.map(p=>({
+      catalogueId:p.catalogueId||null,
+      name:p.name,unit:p.unit||'units',
+      photo:p.photo||null,
+      cost:p.cost||0,
+      existingId:String(p.id||p.supaId)
+    })),
+    ...jsonbProds.map(sp=>({
+      catalogueId:sp.catalogueId||null,
+      name:sp.name,unit:sp.unit||'units',
+      photo:sp.photo||null,
+      cost:sp.cost||0,
+      existingId:null
+    }))
+  ];
+  document.getElementById('es-id').value=id;
+  document.getElementById('es-name').value=s.name;
+  document.getElementById('es-contact').value=s.contact||'';
+  document.getElementById('es-phone').value=s.phone||'';
+  document.getElementById('es-credit').value=s.credit||'full';
+  document.getElementById('es-days').value=s.creditDays||30;
+  document.getElementById('es-notes').value=s.notes||'';
+  document.getElementById('es-days-row').style.display=s.credit==='upfront'?'none':'block';
+  renderEditSupModalProducts();
+  openModal('modal-edit-supplier');
+}
+
+async function updateSupplier(){
+  const id=document.getElementById('es-id').value;
+  const changes={
+    name:document.getElementById('es-name').value.trim(),
+    contact:document.getElementById('es-contact').value.trim(),
+    phone:document.getElementById('es-phone').value.trim(),
+    credit:document.getElementById('es-credit').value,
+    credit_days:parseInt(document.getElementById('es-days').value)||0,
+    notes:document.getElementById('es-notes').value.trim(),
+    products:editSupModalProducts.map(p=>({catalogueId:p.catalogueId,name:p.name,unit:p.unit,cost:p.cost,photo:p.photo})),
+  };
+  closeModal('modal-edit-supplier');
+  await dbUpdate('suppliers',id,changes);
+
+  // Sync products table — update existing, insert new ones
+  const products=load('products',[]);
+  for(const ep of editSupModalProducts){
+    if(ep.existingId&&ep.existingId!=='undefined'){
+      // Update existing product cost price
+      const p=products.find(x=>String(x.id||x.supaId)===ep.existingId);
+      if(p){await dbUpdate('products',ep.existingId,{cost:ep.cost,supplier_id:id});}
+    } else {
+      // New product — insert into products table
+      const exists=products.find(x=>x.name===ep.name&&(String(x.supplier)===String(id)||String(x.supaSupId)===String(id)));
+      if(!exists){
+        await dbInsert('products',{
+          name:ep.name,desc:'',photo:ep.photo||null,
+          stock:0,min:10,unit:ep.unit||'units',
+          cost:ep.cost||0,
+          supplier:id,supaSupId:id,
+          catalogueId:ep.catalogueId||null,
+        });
+      }
+    }
+  }
+  await loadAllData();
+  renderSuppliers();
+  toast('Supplier updated — '+editSupModalProducts.length+' product(s) linked');
+}
+
+function deleteSupplier(){
+  const id=document.getElementById('es-id').value;
+  showConfirm('Delete supplier?','This will remove the supplier. Products linked to them will remain.',async()=>{
+    closeModal('modal-edit-supplier');
+    await dbDelete('suppliers',id);
+    renderSuppliers();
+    toast('Supplier deleted');
+  });
+}
+
+let currentPaySupplierId=null;
+
+function recordPayment(id){
+  currentPaySupplierId=id;
+  const suppliers=load('suppliers',[]);
+  const s=suppliers.find(x=>String(x.id)===String(id)||String(x.supaId)===String(id));if(!s)return;
+  document.getElementById('pay-title').innerHTML=`Record Payment — ${s.name} <button class="modal-close" onclick="closeModal('modal-payment')">✕</button>`;
+  const balBox=document.getElementById('pay-balance-box');
+  if(s.balance>0){
+    balBox.style.background='var(--red-bg)';balBox.style.borderColor='var(--red-mid)';
+    balBox.innerHTML=`<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--red);margin-bottom:4px">Outstanding balance</div><div style="font-size:22px;font-weight:600;font-family:var(--mono);color:var(--red)">LKR ${s.balance.toLocaleString()}</div>`;
+  } else {
+    balBox.style.background='var(--green-bg)';balBox.style.borderColor='var(--green-mid)';
+    balBox.innerHTML=`<div style="font-size:13px;color:var(--green);font-weight:500">✓ This supplier is fully settled — no outstanding balance.</div>`;
+  }
+  document.getElementById('pay-amount').value=s.balance>0?s.balance:'';
+  document.getElementById('pay-method').value='cash';
+  document.getElementById('pay-ref').value='';
+  document.getElementById('pay-after').textContent='';
+  updatePayPreview();
+  // Show payment history with edit/delete
+  const history=(s.payHistory||[]);
+  const histWrap=document.getElementById('pay-history-wrap');
+  if(history.length){
+    const rows=history.slice().reverse().slice(0,10).map((h,ri)=>{
+      const realIdx=history.length-1-ri;
+      return `<tr>
+        <td>${h.date}</td>
+        <td style="font-family:var(--mono);color:var(--green);font-weight:600">LKR ${h.amount.toLocaleString()}</td>
+        <td style="text-transform:capitalize">${h.method}</td>
+        <td style="color:var(--text3);font-size:11px">${h.ref||'—'}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-ghost btn-xs" onclick="editPayment(${realIdx})" style="margin-right:3px">Edit</button>
+          <button class="btn btn-danger btn-xs" onclick="deletePayment(${realIdx})">✕</button>
+        </td>
+      </tr>`;
+    }).join('');
+    histWrap.innerHTML=`<div class="sec-label" style="margin-top:14px">Payment history</div>
+    <table class="mini-table">
+      <tr><th>Date</th><th>Amount</th><th>Method</th><th>Ref</th><th></th></tr>
+      ${rows}
+    </table>`;
+  } else {
+    histWrap.innerHTML='<div style="font-size:12px;color:var(--text3);margin-top:12px">No payments recorded yet</div>';
+  }
+  openModal('modal-payment');
+}
+
+function updatePayPreview(){
+  const suppliers=load('suppliers',[]);
+  const s=suppliers.find(x=>x.id===currentPaySupplierId);if(!s)return;
+  const amt=parseFloat(document.getElementById('pay-amount').value)||0;
+  const after=Math.max(0,s.balance-amt);
+  const el=document.getElementById('pay-after');
+  if(amt>0){
+    const color=after===0?'var(--green)':(amt>s.balance?'var(--amber)':' var(--text2)');
+    el.innerHTML=`Balance after payment: <span style="font-weight:600;font-family:var(--mono);color:${color}">LKR ${after.toLocaleString()}</span>${after===0?' ✓ Fully settled':''}${amt>s.balance?' ⚠ Amount exceeds balance':''}`;
+  } else {
+    el.textContent='';
+  }
+}
+
+async function confirmPayment(){
+  const amt=parseFloat(document.getElementById('pay-amount').value);
+  if(!amt||amt<=0)return toast('Enter a valid amount');
+  const suppliers=load('suppliers',[]);
+  const s=suppliers.find(x=>String(x.id)===String(currentPaySupplierId)||String(x.supaId)===String(currentPaySupplierId));if(!s)return;
+  const method=document.getElementById('pay-method').value;
+  const ref=document.getElementById('pay-ref').value.trim();
+  const today=new Date().toISOString().split('T')[0];
+  if(!s.payHistory)s.payHistory=[];
+  if(window._editPayIdx!=null){
+    s.payHistory.splice(window._editPayIdx,1,{date:today,amount:amt,method,ref});
+    window._editPayIdx=null;window._editPayOldAmt=null;
+  } else {
+    s.payHistory.push({date:today,amount:amt,method,ref});
+  }
+  s.balance=Math.max(0,s.balance-amt);
+  save('suppliers',suppliers);
+  await dbUpdate('suppliers',s.id||s.supaId,{balance:s.balance,pay_history:s.payHistory});
+  renderSuppliers();renderDashboard();
+  const settled=s.balance===0;
+  toast(`✓ LKR ${amt.toLocaleString()} recorded${settled?' — fully settled':''}`);
+  recordPayment(currentPaySupplierId);
+}
+
+function deletePayment(idx){
+  showConfirm('Delete this payment?','The amount will be added back to the outstanding balance.',()=>{
+    const suppliers=load('suppliers',[]);
+    const s=suppliers.find(x=>x.id===currentPaySupplierId);if(!s)return;
+    const removed=s.payHistory.splice(idx,1)[0];
+    s.balance=(s.balance||0)+removed.amount;
+    save('suppliers',suppliers);
+    renderSuppliers();
+    renderDashboard();
+    toast(`Payment of LKR ${removed.amount.toLocaleString()} removed — balance restored`);
+    recordPayment(currentPaySupplierId);
+  });
+}
+
+function editPayment(idx){
+  const suppliers=load('suppliers',[]);
+  const s=suppliers.find(x=>x.id===currentPaySupplierId);if(!s)return;
+  const h=s.payHistory[idx];if(!h)return;
+  // Pre-fill the form with existing values for editing
+  document.getElementById('pay-amount').value=h.amount;
+  document.getElementById('pay-method').value=h.method;
+  document.getElementById('pay-ref').value=h.ref||'';
+  updatePayPreview();
+  // Remove old entry, new one will be saved when user clicks Record Payment
+  // Store edit index so confirmPayment knows to replace rather than push
+  window._editPayIdx=idx;
+  window._editPayOldAmt=h.amount;
+  // Restore balance temporarily so preview is accurate
+  s.balance=(s.balance||0)+h.amount;
+  save('suppliers',suppliers);
+  renderSuppliers();
+  updatePayPreview();
+  toast('Edit the details above and click Record Payment to save');
+}
+
+// ── Order Sheet ──
+let currentOrderSupId=null;
+function openOrderSheet(supId){
+  currentOrderSupId=supId;
+  const s=load('suppliers',[]).find(x=>String(x.id)===String(supId)||String(x.supaId)===String(supId));if(!s)return;
+  const products=load('products',[]);
+  const supProds=products.filter(p=>s.products&&s.products.includes(p.id));
+  const creditBoxCls=s.credit==='full'?'full':s.credit==='partial'?'partial':'upfront';
+  const creditText=s.credit==='full'?`Full credit — ${s.creditDays} day terms`:s.credit==='partial'?'Partial credit — arrange split on delivery':'Cash on delivery — have payment ready';
+  document.getElementById('order-title').innerHTML=`Order from ${s.name} <button class="modal-close" onclick="closeModal('modal-order')">✕</button>`;
+  document.getElementById('order-body').innerHTML=`
+    <a class="btn btn-green" href="tel:${s.phone}" style="margin-bottom:12px;display:inline-flex">📞 Call ${s.contact} — ${s.phone}</a>
+    <div class="credit-box ${creditBoxCls}" style="margin-bottom:12px">${creditText}</div>
+    ${supProds.filter(p=>p.stock<p.min).length?`<div style="font-size:12px;color:var(--red);margin-bottom:8px;font-weight:600">⚡ ${supProds.filter(p=>p.stock<p.min).length} item(s) below minimum stock</div>`:''}
+    <div class="sec-label">Items to order</div>
+    <div id="order-items-wrap" style="max-height:300px;overflow-y:auto;">
+      ${supProds.map(p=>`<div class="order-item-row">
+        <div class="order-item-name">${p.name}${p.stock<p.min?'<span class="low-tag">LOW</span>':''}
+          <div class="order-stock-note">Stock: ${p.stock} ${p.unit} (min ${p.min})</div>
+        </div>
+        <input class="qty-inp" type="number" min="0" value="${p.stock<p.min?p.min-p.stock:0}" data-pid="${p.id}" data-pname="${p.name}" oninput="updateOrderSummary()">
+        <span style="font-size:11px;color:var(--text3)">${p.unit}</span>
+      </div>`).join('')}
+    </div>
+    <div id="order-summary-wrap"></div>
+  `;
+  updateOrderSummary();
+  openModal('modal-order');
+}
+
+function updateOrderSummary(){
+  const inputs=document.querySelectorAll('#order-items-wrap .qty-inp');
+  const items=[];
+  inputs.forEach(i=>{if(parseInt(i.value)>0)items.push({name:i.dataset.pname,qty:parseInt(i.value)});});
+  document.getElementById('order-summary-wrap').innerHTML=items.length
+    ?`<div class="order-summary"><div class="sec-label" style="margin-top:0;margin-bottom:8px">Order summary</div>${items.map(i=>`<div class="order-sum-row"><span>${i.name}</span><span style="font-family:var(--mono)">× ${i.qty}</span></div>`).join('')}<div class="order-sum-row total"><span>Total items</span><span style="font-family:var(--mono)">${items.reduce((a,i)=>a+i.qty,0)}</span></div></div>`:'';
+}
+
+async function confirmOrder(){
+  const inputs=document.querySelectorAll('#order-items-wrap .qty-inp');
+  const items=[];
+  inputs.forEach(i=>{if(parseInt(i.value)>0)items.push({name:i.dataset.pname,qty:parseInt(i.value),pid:i.dataset.pid});});
+  if(!items.length)return toast('Add at least one item');
+  const today=new Date().toISOString().split('T')[0];
+  closeModal('modal-order');
+  await dbInsert('orders',{supplierId:currentOrderSupId,supaSupId:currentOrderSupId,date:today,items,status:'pending'});
+  // Auto-add payment due date to expenses if supplier has credit period
+  const suppliers=load('suppliers',[]);
+  const s=suppliers.find(x=>String(x.id)===String(currentOrderSupId)||String(x.supaId)===String(currentOrderSupId));
+  if(s&&s.creditDays>0&&s.credit!=='upfront'){
+    const dueDate=new Date();
+    dueDate.setDate(dueDate.getDate()+parseInt(s.creditDays));
+    const dueDateStr=dueDate.toISOString().split('T')[0];
+    const expName=`Payment to ${s.name}`;
+    // Estimate order value from cost prices
+    const products=load('products',[]);
+    const orderVal=items.reduce((a,it)=>{
+      const p=products.find(x=>x.name===it.name||(x.id&&String(x.id)===String(it.pid)));
+      return a+(p?p.cost*it.qty:0);
+    },0);
+    await dbInsert('expenses',{
+      name:expName,
+      amount:orderVal||0,
+      cat:'supplier',
+      due:dueDateStr,
+      recur:'none',
+      paid:false,
+      notes:`Order placed ${today} · ${items.length} item(s) · ${s.creditDays} day credit`
+    });
+    await dbLoad('expenses');
+    toast(`Order created — payment due added to calendar (${dueDateStr})`);
+  } else {
+    toast(`Order created — ${items.length} item(s)`);
+  }
+  renderSuppliers();
+}
+
+function markOrderReceived(orderId){
+  showConfirm('Mark order as received?','Stock levels will be updated automatically for all items in this order.',async()=>{
+    const orders=load('orders',[]);
+    const o=orders.find(x=>x.id===orderId||x.supaId===orderId);if(!o)return;
+    const today=new Date().toISOString().split('T')[0];
+    await dbUpdate('orders',o.id||o.supaId,{status:'received',received_date:today});
+    // Auto-update stock for each item
+    const products=load('products',[]);
+    let updated=0;
+    for(const it of o.items){
+      const p=products.find(x=>x.id===it.pid||x.supaId===it.pid||(x.name===it.name&&(x.supplier===o.supplierId||x.supaSupId===o.supplierId||x.supaSupId===o.supaSupId)));
+      if(p){
+        const newStock=(p.stock||0)+it.qty;
+        await dbUpdate('products',p.id||p.supaId,{stock:newStock});
+        p.stock=newStock;updated++;
+      }
+    }
+    save('products',products);
+    renderSuppliers();renderInventory();renderDashboard();
+    toast(`✓ Order received — stock updated for ${updated} product(s)`);
+  });
+}
+
+function deleteOrder(orderId){
+  showConfirm('Delete this order?','This will permanently remove the order record.',async()=>{
+    await dbDelete('orders',orderId);
+    renderSuppliers();
+    toast('Order deleted');
+  });
+}
+
+// ══════════════════════════════════════════
+//  PRODUCTS CATALOGUE
+// ══════════════════════════════════════════
+let catFilter='all';
+
+function setCatFilter(f,el){
+  catFilter=f;
+  document.querySelectorAll('#tab-products .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderCatalogue();
+}
+
+function renderCatalogue(){
+  const catalogue=load('catalogue',[]);
+  const inventory=load('products',[]);
+  const q=document.getElementById('cat-search')?.value.toLowerCase()||'';
+  const inInvIds=new Set(inventory.map(p=>p.catalogueId||p.name));
+
+  document.getElementById('cat-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-val">${catalogue.length}</div><div class="stat-label">Products</div></div>
+    <div class="stat-card"><div class="stat-val">${catalogue.filter(p=>p.price>0).length}</div><div class="stat-label">With selling price</div></div>
+    <div class="stat-card"><div class="stat-val">${[...new Set(catalogue.map(p=>p.cat).filter(Boolean))].length}</div><div class="stat-label">Categories</div></div>
+  `;
+
+  let list=catalogue.filter(p=>{
+    if(catFilter==='in-inventory'&&!inInvIds.has(p.id||p.name))return false;
+    if(catFilter==='not-inventory'&&inInvIds.has(p.id||p.name))return false;
+    if(q&&!(p.name.toLowerCase().includes(q)||(p.cat||'').toLowerCase().includes(q)||(p.desc||'').toLowerCase().includes(q)))return false;
+    return true;
+  });
+
+  const container=document.getElementById('cat-list');
+  if(!list.length){
+    container.innerHTML=`<div class="empty-state"><div class="empty-icon">🏪</div><div class="empty-text">No products yet</div><div class="empty-sub">Add your store's product catalogue here</div></div>`;return;
+  }
+  container.innerHTML=list.map(p=>{
+    const thumbHtml=p.photo
+      ?`<div class="cat-thumb"><img src="${p.photo}" alt="${p.name}"></div>`
+      :`<div class="cat-thumb">📦</div>`;
+    const inInv=inInvIds.has(p.id||p.name);
+    return `<div class="cat-row">
+      ${thumbHtml}
+      <div class="cat-name">
+        <div class="cat-title">${p.name}</div>
+        <div class="cat-meta">${p.cat||'Uncategorised'}${p.desc?' · '+p.desc:''}${p.barcode?' · 🔖'+p.barcode:''}</div>
+      </div>
+      ${inInv?'<span class="badge badge-green" style="flex-shrink:0">In inventory</span>':'<span class="badge badge-gray" style="flex-shrink:0">Not tracked</span>'}
+      <div class="cat-prices">
+        <div class="cat-sell">LKR ${p.price?p.price.toLocaleString():'—'}</div>
+        <div class="cat-unit">per ${p.unit||'unit'}</div>
+      </div>
+      <button class="btn btn-ghost btn-xs" onclick="openEditCatalogueProduct('${p.id}')">Edit</button>
+    </div>`;
+  }).join('');
+}
+
+function setCatModalTitle(t){document.getElementById("cat-modal-title").innerHTML=t+" <button class=\"modal-close\" onclick=\"closeModal('modal-cat-product')\">✕</button>";}
+
+function openAddCatalogueProduct(){
+  setCatModalTitle('Add Product');
+  document.getElementById('cp-save-btn').textContent='Add Product';
+  document.getElementById('cp-delete-btn').style.display='none';
+  document.getElementById('cp-id').value='';
+  ['cp-name','cp-desc','cp-cat','cp-unit','cp-barcode'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cp-price').value='';
+  document.getElementById('cp-photo-data').value='';
+  const wrap=document.getElementById('cp-photo-wrap');
+  wrap.classList.remove('has-photo');wrap.querySelectorAll('img.preview').forEach(i=>i.remove());
+  const oldbtn=document.getElementById('bgbtn-cp-photo-wrap');
+  if(oldbtn)oldbtn.style.display='none';
+  openModal('modal-cat-product');
+}
+
+function openEditCatalogueProduct(id){
+  const catalogue=load('catalogue',[]);
+  const p=catalogue.find(x=>x.id===id||x.supaId===id);if(!p)return;
+  setCatModalTitle('Edit Product');
+  document.getElementById('cp-save-btn').textContent='Save Changes';
+  document.getElementById('cp-delete-btn').style.display='inline-flex';
+  document.getElementById('cp-id').value=p.id;
+  document.getElementById('cp-name').value=p.name;
+  document.getElementById('cp-desc').value=p.desc||'';
+  document.getElementById('cp-cat').value=p.cat||'';
+  document.getElementById('cp-unit').value=p.unit||'';
+  document.getElementById('cp-price').value=p.price||'';
+  document.getElementById('cp-barcode').value=p.barcode||'';
+  document.getElementById('cp-photo-data').value=p.photo||'';
+  const wrap=document.getElementById('cp-photo-wrap');
+  wrap.querySelectorAll('img.preview').forEach(i=>i.remove());
+  if(p.photo){wrap.classList.add('has-photo');const img=document.createElement('img');img.src=p.photo;img.className='preview';wrap.insertBefore(img,wrap.firstChild);}
+  else wrap.classList.remove('has-photo');
+  openModal('modal-cat-product');
+}
+
+async function saveCatalogueProduct(){
+  const name=document.getElementById('cp-name').value.trim();
+  if(!name)return toast('Product name is required');
+  const id=document.getElementById('cp-id').value;
+  const obj={
+    name,
+    desc:document.getElementById('cp-desc').value.trim(),
+    cat:document.getElementById('cp-cat').value.trim(),
+    unit:document.getElementById('cp-unit').value.trim()||'units',
+    price:parseFloat(document.getElementById('cp-price').value)||0,
+    photo:document.getElementById('cp-photo-data').value||null,
+    barcode:document.getElementById('cp-barcode').value.trim()||null,
+  };
+  closeModal('modal-cat-product');
+  if(id){
+    const changes={
+      name:obj.name, notes:obj.desc, cat:obj.cat,
+      unit:obj.unit, price:obj.price, photo:obj.photo,
+      barcode:obj.barcode||null,
+    };
+    await dbUpdate('catalogue',id,changes);
+    // update local cache desc field
+    const catalogue=load('catalogue',[]);
+    const idx=catalogue.findIndex(x=>x.id===id||x.supaId===id);
+    if(idx>=0){catalogue[idx]={...catalogue[idx],...obj};save('catalogue',catalogue);}
+    toast('Product updated');
+  } else {
+    await dbInsert('catalogue',obj);
+    // Reload catalogue from Supabase to ensure local cache is accurate
+    await dbLoad('catalogue');
+    toast('Product added to catalogue');
+  }
+  renderCatalogue();
+}
+
+function deleteCatalogueProduct(){
+  const id=document.getElementById('cp-id').value;
+  showConfirm('Delete product?','This removes it from the catalogue. Inventory items are not affected.',async()=>{
+    closeModal('modal-cat-product');
+    await dbDelete('catalogue',id);
+    renderCatalogue();
+    toast('Product deleted');
+  });
+}
+
+// Quick search picker — safe version using index lookup, no inline JSON
+let _pickerItems = [];
+
+function openCatPicker(onSelect){
+  const catalogue=load('catalogue',[]);
+  if(!catalogue.length){toast('Add products to the catalogue first');return;}
+  window._catPickerCb=onSelect;
+  _pickerItems=catalogue;
+  const existing=document.getElementById('cat-picker-overlay');
+  if(existing)existing.remove();
+  // Temporarily disable parent overlay click-to-close while picker is open
+  document.querySelectorAll('.overlay').forEach(o=>o._pickerOpen=true);
+  const overlay=document.createElement('div');
+  overlay.id='cat-picker-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px';
+  overlay.innerHTML=`<div style="background:var(--surface);border-radius:var(--r-lg);padding:20px;width:100%;max-width:420px;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow-lg)">
+    <div style="font-size:15px;font-weight:600;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+      Pick a product
+      <button id="cat-picker-close" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text3);line-height:1">✕</button>
+    </div>
+    <input class="search-inp" placeholder="Search..." id="cat-picker-inp" style="width:100%;margin-bottom:10px">
+    <div id="cat-picker-list" style="max-height:300px;overflow-y:auto;"></div>
+  </div>`;
+  overlay.addEventListener('click',e=>{
+    if(e.target===overlay){
+      overlay.remove();
+      document.querySelectorAll('.overlay').forEach(o=>delete o._pickerOpen);
+    }
+  });
+  document.body.appendChild(overlay);
+  document.getElementById('cat-picker-close').onclick=()=>{
+    overlay.remove();
+    document.querySelectorAll('.overlay').forEach(o=>delete o._pickerOpen);
+  };
+  document.getElementById('cat-picker-inp').addEventListener('input',e=>filterCatPicker(e.target.value));
+  renderCatPickerList(catalogue);
+  setTimeout(()=>document.getElementById('cat-picker-inp')?.focus(),100);
+}
+
+function renderCatPickerList(items){
+  const list=document.getElementById('cat-picker-list');
+  if(!list)return;
+  if(!items.length){list.innerHTML='<div style="font-size:13px;color:var(--text3);text-align:center;padding:16px">No products found</div>';return;}
+  list.innerHTML='';
+  items.forEach((p,i)=>{
+    const row=document.createElement('div');
+    row.className='cat-row';
+    row.style.cssText='cursor:pointer;margin-bottom:6px';
+    row.innerHTML=`
+      ${p.photo?`<div class="cat-thumb"><img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:4px"></div>`:'<div class="cat-thumb">📦</div>'}
+      <div class="cat-name">
+        <div class="cat-title">${p.name}</div>
+        <div class="cat-meta">${p.unit||'units'}${p.price?' · LKR '+p.price.toLocaleString():''}</div>
+      </div>`;
+    row.addEventListener('click',()=>{
+      document.getElementById('cat-picker-overlay')?.remove();
+      document.querySelectorAll('.overlay').forEach(o=>delete o._pickerOpen);
+      if(window._catPickerCb) window._catPickerCb(p);
+    });
+    list.appendChild(row);
+  });
+}
+
+function filterCatPicker(q){
+  const filtered=q
+    ?_pickerItems.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())||(p.cat||'').toLowerCase().includes(q.toLowerCase()))
+    :_pickerItems;
+  renderCatPickerList(filtered);
+}
+
+// ══════════════════════════════════════════
+//  EXPENSES
+// ══════════════════════════════════════════
+let expFilter='all';
+let selectedCalDay=null;
+
+function setExpFilter(f,el){
+  expFilter=f;
+  document.querySelectorAll('#tab-expenses .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderExpenses();
+}
+
+let calViewMonth=null; // {year, month} currently displayed
+
+function shiftCalMonth(delta){
+  if(!calViewMonth){const n=new Date();calViewMonth={year:n.getFullYear(),month:n.getMonth()};}
+  calViewMonth.month+=delta;
+  if(calViewMonth.month>11){calViewMonth.month=0;calViewMonth.year++;}
+  if(calViewMonth.month<0){calViewMonth.month=11;calViewMonth.year--;}
+  renderCalendar();
+}
+
+function renderCalendar(){
+  const expenses=load('expenses',[]);
+  const staff=load('staff',[]);
+  const today=new Date();today.setHours(0,0,0,0);
+  if(!calViewMonth)calViewMonth={year:today.getFullYear(),month:today.getMonth()};
+  const {year,month}=calViewMonth;
+  // Update month title
+  const monthTitle=new Date(year,month,1).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  document.getElementById('cal-month-title').textContent=monthTitle;
+  // First day of month, pad to Sunday=0
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const daysInPrev=new Date(year,month,0).getDate();
+  let html='';
+  // Previous month padding
+  for(let i=firstDay-1;i>=0;i--){
+    const d=new Date(year,month-1,daysInPrev-i);
+    html+=`<div class="cal-cell other-month">${d.getDate()}</div>`;
+  }
+  // Current month days
+  for(let d=1;d<=daysInMonth;d++){
+    const date=new Date(year,month,d);
+    const ds=date.toISOString().split('T')[0];
+    const isToday=date.getTime()===today.getTime();
+    const isSelected=selectedCalDay===ds;
+    const dayOfMonth=d;
+    const hasBill=expenses.some(e=>!e.paid&&(
+      e.due===ds || // exact date match
+      (e.recur==='monthly'&&e.due&&new Date(e.due+'T00:00:00').getDate()===dayOfMonth) // monthly recurring - same day each month
+    ));
+    // Fix: coerce payday to number, show on all months not just current
+    const hasSalary=staff.some(s=>parseInt(s.payday)===d);
+    const salaryNames=staff.filter(s=>parseInt(s.payday)===d).map(s=>s.name).join(', ');
+    let cls='cal-cell';
+    if(isSelected)cls+=' active';
+    if(isToday)cls+=' today';
+    if(hasBill)cls+=' has-event';
+    if(hasSalary&&!hasBill)cls+=' has-salary';
+    if(hasBill&&hasSalary)cls+=' has-event'; // bill takes priority visually
+    const titleText=[hasBill?'Bill due':'',hasSalary?'Salary: '+salaryNames:''].filter(Boolean).join(' | ');
+    html+=`<div class="${cls}" onclick="selectCalDay('${ds}')" ${titleText?`data-tip="${titleText}"`:''}>${d}</div>`;
+  }
+  // Next month padding to complete grid
+  const totalCells=Math.ceil((firstDay+daysInMonth)/7)*7;
+  let nextDay=1;
+  for(let i=firstDay+daysInMonth;i<totalCells;i++){
+    html+=`<div class="cal-cell other-month">${nextDay++}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+}
+
+function selectCalDay(ds){
+  selectedCalDay=(selectedCalDay===ds?null:ds);
+  renderCalendar();
+  renderExpenses();
+}
+
+function renderExpenses(){
+  const expenses=load('expenses',[]);
+  const today=new Date();today.setHours(0,0,0,0);
+
+  const totalMonthly=expenses.filter(e=>e.recur==='monthly').reduce((a,e)=>a+e.amount,0);
+  const overdue=expenses.filter(e=>!e.paid&&daysUntil(e.due)<0).length;
+  const unpaid=expenses.filter(e=>!e.paid).reduce((a,e)=>a+e.amount,0);
+  document.getElementById('exp-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-val">LKR ${(totalMonthly/1000).toFixed(1)}k</div><div class="stat-label">Monthly recurring</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:${overdue>0?'var(--red)':'var(--text)'}">${overdue}</div><div class="stat-label">Overdue bills</div></div>
+    <div class="stat-card"><div class="stat-val">LKR ${(unpaid/1000).toFixed(1)}k</div><div class="stat-label">Total unpaid</div></div>
+  `;
+
+  let list=expenses.filter(e=>{
+    if(selectedCalDay&&e.due!==selectedCalDay)return false;
+    if(expFilter==='overdue'&&(e.paid||daysUntil(e.due)>=0))return false;
+    if(expFilter==='upcoming'&&(e.paid||daysUntil(e.due)<0||daysUntil(e.due)>7))return false;
+    if(expFilter==='paid'&&!e.paid)return false;
+    if(expFilter==='recurring'&&e.recur==='none')return false;
+    return true;
+  });
+  list.sort((a,b)=>new Date(a.due)-new Date(b.due));
+
+  const container=document.getElementById('exp-list');
+  if(!list.length){
+    container.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No expenses found</div><div class="empty-sub">Add bills, utilities, and maintenance costs</div></div>`;return;
+  }
+
+  container.innerHTML=list.map(e=>{
+    const d=daysUntil(e.due);
+    const dueCls=e.paid?'':(d<0?'overdue':(d<=3?'soon':''));
+    const dueText=e.paid?'Paid ✓':d<0?`Overdue by ${Math.abs(d)} day(s)`:d===0?'Due today':d<=3?`Due in ${d} day(s)`:`Due ${fmtDate(e.due)}`;
+    return `<div class="exp-row" onclick="toggleExpPaid('${e.id||e.supaId}')">
+      <div class="exp-icon" style="background:${e.paid?'var(--green-bg)':'var(--surface2)'}">${catIcon(e.cat)}</div>
+      <div class="exp-info">
+        <div class="exp-name" style="${e.paid?'text-decoration:line-through;color:var(--text3)':''}">${e.name}</div>
+        <div class="exp-meta">${e.cat.charAt(0).toUpperCase()+e.cat.slice(1)} · ${e.recur!=='none'?e.recur+' recurring':'one-time'}${e.notes?' · '+e.notes:''}</div>
+      </div>
+      <div>
+        <div class="exp-amount">LKR ${e.amount.toLocaleString()}</div>
+        <div class="exp-due ${dueCls}">${dueText}</div>
+      </div>
+      <button class="btn ${e.paid?'btn-ghost':'btn-green'} btn-xs" onclick="toggleExpPaid('${e.id||e.supaId}');event.stopPropagation()">${e.paid?'Undo':'Mark paid'}</button>
+      <button class="btn btn-ghost btn-xs" onclick="openEditExpense('${e.id||e.supaId}');event.stopPropagation()">Edit</button>
+      <button class="btn btn-ghost btn-xs" onclick="deleteExpense('${e.id||e.supaId}');event.stopPropagation()">✕</button>
+    </div>`;
+  }).join('');
+}
+
+async function toggleExpPaid(id){
+  const expenses=load('expenses',[]);
+  const e=expenses.find(x=>x.id===id||x.supaId===id);if(!e)return;
+  e.paid=!e.paid;
+  await dbUpdate('expenses',e.id||e.supaId,{paid:e.paid});
+  if(e.paid&&e.recur==='monthly'){
+    const nextDue=new Date(e.due+'T00:00:00');nextDue.setMonth(nextDue.getMonth()+1);
+    const exists=expenses.some(x=>x.name===e.name&&x.due===nextDue.toISOString().split('T')[0]);
+    if(!exists){
+      const next={...e,paid:false,due:nextDue.toISOString().split('T')[0]};
+      delete next.id;delete next.supaId;
+      await dbInsert('expenses',next);
+    }
+  }
+  save('expenses',expenses);
+  renderExpenses();renderCalendar();
+  toast(e.paid?'Marked as paid':'Unmarked');
+}
+
+function deleteExpense(id){
+  showConfirm('Delete this expense?','This cannot be undone.',async()=>{
+    await dbDelete('expenses',id);
+    renderExpenses();renderCalendar();
+    toast('Expense deleted');
+  });
+}
+
+function openEditExpense(id){
+  const expenses=load('expenses',[]);
+  const e=expenses.find(x=>String(x.id)===String(id)||String(x.supaId)===String(id));if(!e)return;
+  document.getElementById('e-name').value=e.name;
+  document.getElementById('e-amount').value=e.amount;
+  document.getElementById('e-cat').value=e.cat||'other';
+  document.getElementById('e-due').value=e.due||'';
+  document.getElementById('e-recur').value=e.recur||'none';
+  document.getElementById('e-notes').value=e.notes||'';
+  // Store id for update
+  document.getElementById('e-name').dataset.editId=id;
+  openModal('modal-add-expense');
+}
+
+function openAddExpense(){
+  ['e-name','e-notes'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.value='';
+    delete el.dataset.editId;
+  });
+  document.getElementById('e-amount').value='';
+  document.getElementById('e-cat').value='utility';
+  document.getElementById('e-recur').value='monthly';
+  document.getElementById('e-due').value=new Date().toISOString().split('T')[0];
+  openModal('modal-add-expense');
+}
+
+async function saveExpense(){
+  const name=document.getElementById('e-name').value.trim();
+  const amount=parseFloat(document.getElementById('e-amount').value);
+  const due=document.getElementById('e-due').value;
+  if(!name||!amount||!due)return toast('Name, amount and due date required');
+  const editId=document.getElementById('e-name').dataset.editId;
+  closeModal('modal-add-expense');
+  if(editId){
+    delete document.getElementById('e-name').dataset.editId;
+    await dbUpdate('expenses',editId,{name,amount,cat:document.getElementById('e-cat').value,due,recur:document.getElementById('e-recur').value,notes:document.getElementById('e-notes').value.trim()});
+    await dbLoad('expenses');
+    renderExpenses();renderCalendar();
+    toast('Expense updated');
+  } else {
+    const obj={name,amount,cat:document.getElementById('e-cat').value,due,recur:document.getElementById('e-recur').value,paid:false,notes:document.getElementById('e-notes').value.trim()};
+    await dbInsert('expenses',obj);
+    await dbLoad('expenses');
+    renderExpenses();renderCalendar();
+    toast('Expense added');
+  }
+}
+
+// ══════════════════════════════════════════
+//  STAFF
+// ══════════════════════════════════════════
+function renderStaff(){
+  const staff=load('staff',[]);
+  const totalSalary=staff.reduce((a,s)=>a+s.salary,0);
+  const unpaid=staff.filter(s=>!s.paidThisMonth).length;
+  document.getElementById('staff-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-val">${staff.length}</div><div class="stat-label">Staff members</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:${unpaid>0?'var(--amber)':'var(--green)'}">${unpaid}</div><div class="stat-label">Salary pending</div></div>
+    <div class="stat-card"><div class="stat-val">LKR ${(totalSalary/1000).toFixed(1)}k</div><div class="stat-label">Monthly payroll</div></div>
+  `;
+
+  const container=document.getElementById('staff-list');
+  if(!staff.length){
+    container.innerHTML=`<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">No staff added yet</div><div class="empty-sub">Add staff members to track salaries</div></div>`;return;
+  }
+
+  container.innerHTML=staff.map(s=>`
+    <div class="staff-card">
+      <div class="staff-avatar">${s.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()}</div>
+      <div class="staff-info">
+        <div class="staff-name">${s.name}</div>
+        <div class="staff-role">${s.role} · ${s.phone||'—'} · Pay day: ${s.payday}${s.payday===1?'st':s.payday===2?'nd':s.payday===3?'rd':'th'}</div>
+      </div>
+      <div style="flex:1">
+        <div class="staff-salary">LKR ${s.salary.toLocaleString()}</div>
+        <div class="staff-pay-status" style="color:${s.paidThisMonth?'var(--green)':'var(--amber)'}">${s.paidThisMonth?'Paid this month ✓':'Payment pending'}</div>
+      </div>
+      <button class="btn ${s.paidThisMonth?'btn-ghost':'btn-green'} btn-sm" onclick="markSalaryPaid('${s.id||s.supaId}')" style="margin-right:4px">${s.paidThisMonth?'Undo':'Mark paid'}</button>
+      <button class="btn btn-ghost btn-sm" onclick="openEditStaff('${s.id||s.supaId}')">Edit</button>
+    </div>
+  `).join('');
+}
+
+async function markSalaryPaid(id){
+  const staff=load('staff',[]);
+  const s=staff.find(x=>x.id===id||x.supaId===id);if(!s)return;
+  s.paidThisMonth=!s.paidThisMonth;
+  save('staff',staff);
+  await dbUpdate('staff',s.id||s.supaId,{paid_this_month:s.paidThisMonth});
+  renderStaff();renderDashboard();
+  toast(s.paidThisMonth?`${s.name} marked as paid`:`${s.name} payment unmarked`);
+}
+
+function openAddStaff(){
+  document.getElementById('st-modal-title').textContent='Add Staff Member';
+  document.getElementById('st-save-btn').textContent='Add Staff';
+  document.getElementById('st-delete-btn').style.display='none';
+  document.getElementById('st-id').value='';
+  ['st-name','st-role','st-phone'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('st-salary').value='';
+  document.getElementById('st-payday').value='1';
+  openModal('modal-add-staff');
+}
+
+function openEditStaff(id){
+  const staff=load('staff',[]);
+  const s=staff.find(x=>String(x.id)===String(id)||String(x.supaId)===String(id));if(!s)return;
+  document.getElementById('st-modal-title').textContent='Edit Staff Member';
+  document.getElementById('st-save-btn').textContent='Save Changes';
+  document.getElementById('st-delete-btn').style.display='inline-flex';
+  document.getElementById('st-id').value=s.id||s.supaId;
+  document.getElementById('st-name').value=s.name;
+  document.getElementById('st-role').value=s.role||'';
+  document.getElementById('st-phone').value=s.phone||'';
+  document.getElementById('st-salary').value=s.salary||0;
+  document.getElementById('st-payday').value=s.payday||1;
+  openModal('modal-add-staff');
+}
+
+async function saveStaffEdit(){
+  const id=document.getElementById('st-id').value;
+  const name=document.getElementById('st-name').value.trim();
+  if(!name)return toast('Name is required');
+  if(!id){
+    await saveStaff();return;
+  }
+  const changes={
+    name,
+    role:document.getElementById('st-role').value.trim(),
+    phone:document.getElementById('st-phone').value.trim(),
+    salary:parseInt(document.getElementById('st-salary').value)||0,
+    payday:parseInt(document.getElementById('st-payday').value)||1,
+  };
+  closeModal('modal-add-staff');
+  await dbUpdate('staff',id,changes);
+  await dbLoad('staff');
+  renderStaff();
+  toast('Staff updated');
+}
+
+function deleteStaff(){
+  const id=document.getElementById('st-id').value;
+  showConfirm('Delete staff member?','This will permanently remove them.',async()=>{
+    closeModal('modal-add-staff');
+    await dbDelete('staff',id);
+    renderStaff();renderDashboard();
+    toast('Staff member deleted');
+  });
+}
+
+async function saveStaff(){
+  const name=document.getElementById('st-name').value.trim();
+  if(!name)return toast('Name is required');
+  const obj={name,role:document.getElementById('st-role').value.trim(),phone:document.getElementById('st-phone').value.trim(),salary:parseInt(document.getElementById('st-salary').value)||0,payday:parseInt(document.getElementById('st-payday').value)||1,paidThisMonth:false};
+  closeModal('modal-add-staff');
+  await dbInsert('staff',obj);
+  await dbLoad('staff');
+  renderStaff();
+  toast('Staff member added');
+}
+
+// ══════════════════════════════════════════
+//  CONFIRM DIALOG
+// ══════════════════════════════════════════
+function showConfirm(title,msg,onOk){
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-msg').textContent=msg;
+  document.getElementById('confirm-ok').onclick=()=>{closeModal('modal-confirm');onOk();};
+  openModal('modal-confirm');
+}
+
+// ══════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════
+function showLoginScreen(show){
+  // Try immediately, retry after short delay if element not ready yet
+  const tryShow=()=>{
+    const el=document.getElementById('login-screen');
+    if(el){el.style.display=show?'flex':'none';return true;}
+    return false;
+  };
+  if(!tryShow())setTimeout(tryShow,100);
+}
+function showSignup(){
+  document.getElementById('signup-section').style.display='block';
+  document.getElementById('login-btn').style.display='none';
+}
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-password').value;
+  const errEl=document.getElementById('login-err');
+  errEl.classList.remove('show');
+  if(!email||!pass){errEl.textContent='Email and password required';errEl.classList.add('show');return;}
+  document.getElementById('login-btn').textContent='Signing in...';
+  const {data,error}=await supa.auth.signInWithPassword({email,password:pass});
+  if(error){
+    errEl.textContent=error.message;errEl.classList.add('show');
+    document.getElementById('login-btn').textContent='Sign in';
+  }
+}
+async function doSignup(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-password').value;
+  const confirm=document.getElementById('signup-confirm').value;
+  const errEl=document.getElementById('login-err');
+  errEl.classList.remove('show');
+  if(pass!==confirm){errEl.textContent='Passwords do not match';errEl.classList.add('show');return;}
+  if(pass.length<6){errEl.textContent='Password must be at least 6 characters';errEl.classList.add('show');return;}
+  const {data,error}=await supa.auth.signUp({email,password:pass});
+  if(error){errEl.textContent=error.message;errEl.classList.add('show');}
+  else{errEl.style.background='var(--green-bg)';errEl.style.color='var(--green)';errEl.textContent='Account created! Check your email to confirm, then sign in.';errEl.classList.add('show');}
+}
+async function doLogout(){
+  await supa.auth.signOut();
+  currentUser=null;
+  showLoginScreen(true);
+  toast('Signed out');
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+let _appReady=false;
+
+// Wait for DOM to be ready before doing anything
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+
+function initApp(){
+
+async function bootApp(user){
+  if(_appReady)return; // prevent double-boot
+  _appReady=true;
+  currentUser=user;
+  showLoginScreen(false);
+  setSyncStatus('syncing','Syncing...');
+  try{
+    await loadAllData();
+  }catch(e){
+    console.error('Boot load error:',e);
+  }
+  if(window._pwaStartTab){showTab(window._pwaStartTab);window._pwaStartTab=null;}
+  else renderDashboard();
+  setSyncStatus('synced','✓ Synced');
+}
+
+// Single auth state listener — handles login, logout, and page refresh
+supa.auth.onAuthStateChange(async(event,session)=>{
+  if(session?.user){
+    await bootApp(session.user);
+  } else {
+    _appReady=false;
+    currentUser=null;
+    showLoginScreen(true);
+    setSyncStatus('offline','Not signed in');
+  }
+});
+
+// Kick off session check on page load
+(async()=>{
+  try{
+    const {data:{session},error}=await supa.auth.getSession();
+    if(error)throw error;
+    if(!session?.user){
+      showLoginScreen(true);
+      setSyncStatus('offline','Not signed in');
+    }
+    // bootApp will be called by onAuthStateChange if session exists
+  }catch(e){
+    console.error('Session check error:',e);
+    showLoginScreen(true);
+    setSyncStatus('offline','Connection error');
+  }
+})();
+
+} // end initApp
+
+// Allow pressing Enter on login form
+function setupLoginListeners(){
+  const pw=document.getElementById('login-password');
+  const em=document.getElementById('login-email');
+  if(pw)pw.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  if(em)em.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',setupLoginListeners);
+}else{
+  setupLoginListeners();
+}
+
+// ══════════════════════════════════════════
+//  PWA SERVICE WORKER REGISTRATION
+// ══════════════════════════════════════════
+// Handle PWA shortcuts — ?tab=pos etc
+(function(){
+  const params=new URLSearchParams(window.location.search);
+  const tab=params.get('tab');
+  if(tab){
+    // Wait for auth then switch tab
+    window._pwaStartTab=tab;
+  }
+})();
+
+// Unregister any old service workers - they cause stale cache issues
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    regs.forEach(reg=>reg.unregister());
+  });
+}
+
+</script>
+</body>
+</html>
